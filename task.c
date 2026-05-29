@@ -13,7 +13,6 @@ unsigned long system_call_function(struct pt_regs* regs){
 }
 void user_level_function(){
 	long ret=0;
-	//color_printk(0xff00,0,"user_level_function task is running\n");
 	char string[]="Hello World!\n";
 	__asm__ __volatile__(
 		"leaq sysexit_return_address(%%rip),%%rdx \n\t"

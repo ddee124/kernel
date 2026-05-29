@@ -133,7 +133,6 @@ error_code:
     pushq %r14
     pushq %r15
     cld
-    movq ERRCODE(%rsp),%rsi
     movq FUNC(%rsp),%rdx
     movq $0x10,%rdi
     movq %rdi,%ds
@@ -301,32 +300,9 @@ control_protection_exception:
 .global unknown_interrupt
 unknown_interrupt:
 	pushq $0
-	cld
 	pushq %rax
-	pushq %rax
-    movq %es,%rax
-    pushq %rax
-    movq %ds,%rax
-    pushq %rax
-    xorq %rax,%rax
-    pushq %rbp
-    pushq %rdi
-    pushq %rsi
-    pushq %rdx
-    pushq %rcx
-    pushq %rbx
-    pushq %r8
-    pushq %r9
-    pushq %r10
-    pushq %r11
-    pushq %r12
-    pushq %r13
-    pushq %r14
-    pushq %r15
-    movq $0x10,%rdx
-    movq %rdx,%ds
-    movq %rdx,%es
-    movq %rsp,%rdi
-    callq do_unknown_interrupt
+	leaq do_unknown_interrupt(%rip),%rax
+	xchgq %rax,(%rsp)
+	jmp error_code
     jmp RESTORE_ALL
     

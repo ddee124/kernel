@@ -1,179 +1,136 @@
 #include "trap.h"
 #include "gate.h"
 #include "printk.h"
-void do_divide_error(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_divide_error(0),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+#include "ptrace.h"
+void do_divide_error(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_divide_error(0),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_debug(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_debug(1),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_debug(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_debug(1),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_nmi(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_nmi(2),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_nmi(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_nmi(2),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_int3(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_int3(3),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_int3(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_int3(3),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_overflow(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_overflow(4),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_overflow(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_overflow(4),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_bounds(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_bounds(5),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_bounds(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_bounds(5),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_undefined_opcode(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF,0,"do_undefined_opcode(6),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_undefined_opcode(struct pt_regs *rsp){
+	color_printk(0xFF,0,"do_undefined_opcode(6),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_dev_not_available(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_dev_not_available(7),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_dev_not_available(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_dev_not_available(7),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_double_fault(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_double_fault(8),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_double_fault(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_double_fault(8),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_coprocessor_segment_overrun(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_coprocessor_segment_overrun(9),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_coprocessor_segment_overrun(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_coprocessor_segment_overrun(9),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_invalid_TSS(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xff0000,0,"do_invalid_TSS(10),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
-	if(error_code&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
-	if(error_code&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
+void do_invalid_TSS(struct pt_regs *rsp){
+	color_printk(0xff0000,0,"do_invalid_TSS(10),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
+	if(rsp->errcode&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
+	if(rsp->errcode&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
 	else    color_printk(0xff0000,0,"Refers to a descriptor in the GDT or the current LDT;\n");
-	if((error_code&0x02)==0){
-		if(error_code&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
+	if((rsp->errcode&0x02)==0){
+		if(rsp->errcode&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
 		else    color_printk(0xff0000,0,"Refers to a descriptor in the current GDT;\n");
 	}
-	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",error_code&0xfff8);
+	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",rsp->errcode&0xfff8);
 	while(1);
 }
-void do_segment_not_present(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xff0000,0,"do_segment_not_present(11),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
-	if(error_code&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
-	if(error_code&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
+void do_segment_not_present(struct pt_regs *rsp){
+	color_printk(0xff0000,0,"do_segment_not_present(11),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
+	if(rsp->errcode&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
+	if(rsp->errcode&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
 	else    color_printk(0xff0000,0,"Refers to a descriptor in the GDT or the current LDT;\n");
-	if((error_code&0x02)==0){
-		if(error_code&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
+	if((rsp->errcode&0x02)==0){
+		if(rsp->errcode&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
 		else    color_printk(0xff0000,0,"Refers to a descriptor in the current GDT;\n");
 	}
-	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",error_code&0xfff8);
+	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",rsp->errcode&0xfff8);
 	while(1);
 }
-void do_stack_segment_fault(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xff0000,0,"do_stack_segment_fault(12),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
-	if(error_code&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
-	if(error_code&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
+void do_stack_segment_fault(struct pt_regs *rsp){
+	color_printk(0xff0000,0,"do_stack_segment_fault(12),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
+	if(rsp->errcode&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
+	if(rsp->errcode&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
 	else    color_printk(0xff0000,0,"Refers to a descriptor in the GDT or the current LDT;\n");
-	if((error_code&0x02)==0){
-		if(error_code&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
+	if((rsp->errcode&0x02)==0){
+		if(rsp->errcode&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
 		else    color_printk(0xff0000,0,"Refers to a descriptor in the current GDT;\n");
 	}
-	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",error_code&0xfff8);
+	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",rsp->errcode&0xfff8);
 	while(1);
 }
-void do_general_protection(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xff0000,0,"do_general_protection(13),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
-	if(error_code&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
-	if(error_code&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
+void do_general_protection(struct pt_regs *rsp){
+	color_printk(0xff0000,0,"do_general_protection(13),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
+	if(rsp->errcode&0x01)	color_printk(0xff0000,0,"The exception occurred during delivery of an event external to the program,such as an interrupt or an earlier exception.\n");
+	if(rsp->errcode&0x02)	color_printk(0xff0000,0,"Refers to a gate descriptor in the IDT;\n");
 	else    color_printk(0xff0000,0,"Refers to a descriptor in the GDT or the current LDT;\n");
-	if((error_code&0x02)==0){
-		if(error_code&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
+	if((rsp->errcode&0x02)==0){
+		if(rsp->errcode&0x04)	color_printk(0xff0000,0,"Refers to a segment or gate descriptor in the IDT;\n");
 		else    color_printk(0xff0000,0,"Refers to a descriptor in the current GDT;\n");
 	}
-	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",error_code&0xfff8);
+	color_printk(0xff0000,0,"Segment Selector Index:%#010x\n",rsp->errcode&0xfff8);
 	while(1);
 }
-void do_page_fault(unsigned long rsp,unsigned long error_code){
-	unsigned long*p=0;
+void do_page_fault(struct pt_regs *rsp){
 	unsigned long cr2=0;
 	__asm__ __volatile__("movq %%cr2,%0":"=r"(cr2)::"memory");
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xff0000,0,"do_page_fault(14),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
-	if(!(error_code&0x01))	color_printk(0xff0000,0,"Page Not-Present,\t");
-	if(error_code&0x02)	color_printk(0xff0000,0,"Write Cause Fault,\t");
+	color_printk(0xff0000,0,"do_page_fault(14),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
+	if(!(rsp->errcode&0x01))	color_printk(0xff0000,0,"Page Not-Present,\t");
+	if(rsp->errcode&0x02)	color_printk(0xff0000,0,"Write Cause Fault,\t");
 	else    color_printk(0xff0000,0,"Read Cause Fault,\t");
-	if(error_code&0x04)	color_printk(0xff0000,0,"Fault in user(3)\t");
+	if(rsp->errcode&0x04)	color_printk(0xff0000,0,"Fault in user(3)\t");
 	else    color_printk(0xff0000,0,"Fault in supervisor(0,1,2)\t");
-	if(error_code&0x08)	color_printk(0xff0000,0,",Reserved Bit Cause Fault\t");
-	if(error_code&0x10)	color_printk(0xff0000,0,",Instruction fetch Cause Fault");
+	if(rsp->errcode&0x08)	color_printk(0xff0000,0,",Reserved Bit Cause Fault\t");
+	if(rsp->errcode&0x10)	color_printk(0xff0000,0,",Instruction fetch Cause Fault");
 	color_printk(0xff0000,0,"\n");
 	color_printk(0xff0000,0,"CR2:%#018lx\n",cr2);
 	while(1);
 }
-void do_x87_FPU_error(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_x87_FPU_error(16),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_x87_FPU_error(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_x87_FPU_error(16),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_alignment_check(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_alignment_check(17),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_alignment_check(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_alignment_check(17),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_machine_check(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_machine_check(18),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_machine_check(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_machine_check(18),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_SIMD_exception(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_SIMD_exception(19),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_SIMD_exception(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_SIMD_exception(19),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_virtualization_exception(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_virtualization_exception(20),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_virtualization_exception(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_virtualization_exception(20),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_control_protection_exception(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_control_protection_exception(21),ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_control_protection_exception(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_control_protection_exception(21),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
-void do_unknown_interrupt(unsigned long rsp,unsigned long error_code){
-	unsigned long *p=0;
-	p=(unsigned long*)(rsp+0x98);
-	color_printk(0xFF0000,0,"do_unknown_interrupt,ERROR_CODE:%#018lx,RSP:%#018lx,RIP:%#018lx\n",error_code,rsp,*p);
+void do_unknown_interrupt(struct pt_regs *rsp){
+	color_printk(0xFF0000,0,"do_unknown_interrupt,errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
 void sys_vector_init(){
@@ -199,5 +156,5 @@ void sys_vector_init(){
 	set_trap_gate(19,1,SIMD_exception);
 	set_trap_gate(20,1,virtualization_exception);
 	//set_system_gate(SYSTEM_CALL_VECTOR,7,system_call);
-	for(int i=32;i<256;i++)	set_intr_gate(i,1,unknown_interrupt);
+	for(int i=21;i<256;i++)	set_intr_gate(i,1,unknown_interrupt);
 }
