@@ -3,7 +3,7 @@
 #define KERNEL_CS 0x8
 #define KERNEL_DS 0x10
 #define USER_CS 0x28
-#define USER_DS 0x30
+#define USER_DS 0x20
 #define CLONE_FS 1
 #define CLONE_FILES 2
 #define CLONE_SIGNAL 4
@@ -167,4 +167,6 @@ unsigned long sys_printf(struct pt_regs* regs){
 	return 1;
 }
 system_call_t system_call_table[MAX_SYSTEM_CALL_NR]={[0]=no_system_call,[1]=sys_printf,[2 ... MAX_SYSTEM_CALL_NR-1]=no_system_call};
+unsigned long syscall_rsp=0x7c00;
+unsigned long user_rsp_save;
 #endif

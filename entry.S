@@ -1,7 +1,15 @@
+.code64
 .global system_call
 system_call:
-	sti
-	subq $0x38,%rsp
+	cli
+	movq %rsp,user_rsp_save(%rip)
+	movq syscall_rsp(%rip),%rsp
+	pushq $0x20
+	pushq user_rsp_save(%rip)
+	pushq %r11
+	pushq $0x28
+	pushq %rcx
+	subq $0x10,%rsp
 	cld
 	pushq %rax
 	movq %es,%rax
@@ -27,9 +35,11 @@ system_call:
 	movq %rdx,%ds
 	movq %rdx,%es
 	movq %rsp,%rdi
+	sti
 	callq system_call_function
 .global ret_system_call
 ret_system_call:
+	cli
 	movq %rax,0x80(%rsp)
 	popq %r15
 	popq %r14
@@ -50,9 +60,14 @@ ret_system_call:
 	popq %rax
 	movq %rax,%es
 	popq %rax
-	addq $0x38,%rsp
-	.byte 0x48
-	sysexit
+	addq $0x10,%rsp
+	popq %rcx
+	addq $0x08,%rsp
+	popq %r11
+	addq $0x10,%rsp
+	movq -0x10(%rsp),%rsp
+	sti
+	sysretq
 
 R15=0x00
 R14=0x08
