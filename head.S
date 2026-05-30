@@ -85,7 +85,10 @@ setup_TSS64:
     movq %rdx,88(%rdi)
     //mov $0x50,%ax
     //ltr %ax
-    
+    movq $0xc0000080,%rcx
+    rdmsr
+    orq $1,%rax
+    wrmsr
     movq %r15,%rdi
     movq go_to_kernel(%rip),%rax
     pushq $0x08
@@ -128,11 +131,11 @@ GDT_Table:
     .quad 0x0020980000000000 /*KERNEL Code 64-bit Segment 08*/
     .quad 0x0000920000000000 /*KERNEL Data 64-bit Segment 10*/
     .quad 0x0000000000000000 /*USER Code 32-bit Segment 18*/
-    .quad 0x0000000000000000 /*USER Code 32-bit Segment 20*/
+    //.quad 0x0000000000000000 /*USER Code 32-bit Segment 20*/
+    .quad 0x0000f20000000000 /*USER Data 64-bit Segment 20*/
     .quad 0x0020f80000000000 /*USER Code 64-bit Segment 28*/
-    .quad 0x0000f20000000000 /*USER Data 64-bit Segment 30*/
-    .quad 0x00cf9a000000ffff /*KERNEL Code 32-bit Segment 38*/
-    .quad 0x00cf92000000ffff /*KERNEL Data 32-bit Segment 40*/
+    .quad 0x00cf9a000000ffff /*KERNEL Code 32-bit Segment 30*/
+    .quad 0x00cf92000000ffff /*KERNEL Data 32-bit Segment 38*/
     .fill 10,8,0
 GDT_END:
 GDT_POINTER:
