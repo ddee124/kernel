@@ -103,9 +103,9 @@ extern inline void wrmsr(unsigned long address,unsigned long value){
 		:"memory"
 	);
 }
-#define container_of(ptr,type,member)\
+/*#define container_of(ptr,type,member)\
 ({\
 	typeof(((type*)0)->member)*p=(ptr);\
 	(type*)((unsigned long)p-(unsigned long)&(((type*)0)->member));\
-})
+})*/
 #endif

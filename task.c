@@ -23,14 +23,17 @@ void user_level_function(){
 	while(1);
 }
 unsigned long do_execve(struct pt_regs* regs){
-	regs->rip=0x800000;
-	regs->rsp=0xa00000;
+	struct Page* page=0;
+	page=alloc_pages(ZONE_NORMAL,1,0);
+	regs->rip=page->PHY_address;
+	page=alloc_pages(ZONE_NORMAL,1,0);
+	regs->rsp=page->PHY_address;
 	regs->rax=1;
 	regs->ds=0;
 	regs->es=0;
 	regs->rflags=1<<9;
 	color_printk(0xff0000,0,"do_execve task is running\n");
-	memcpy(user_level_function,(void*)0x800000,1024);
+	memcpy(user_level_function,(void*)regs->rip,1024);
 	return 0;
 }
 __asm__(
@@ -76,7 +79,7 @@ unsigned long do_fork(struct pt_regs *regs,unsigned long clone_flags,unsigned lo
 	struct thread_struct *thd=0;
 	struct Page *p=0;
 	color_printk(0xffffff,0,"alloc_pages,bitmap:%#018lx\n",*memory_management_struct.bits_map);
-	p=alloc_pages(ZONE_NORMAL,1,PG_PTable_Maped|PG_Active|PG_Kernel);
+	p=alloc_pages(ZONE_NORMAL,1,PG_PTable_Maped|PG_Kernel);
 	color_printk(0xffffff,0,"alloc_pages,bitmap:%#018lx\n",*memory_management_struct.bits_map);
 	tsk=(struct task_struct*)Phy_To_Virt(p->PHY_address);
 	color_printk(0xffffff,0,"struct task_struct address:%#018lx\n",(unsigned long)tsk);
@@ -155,6 +158,7 @@ void task_init(){
 	list_init(&init_task_union.task.list);
 	kernel_thread(init,10,CLONE_FS|CLONE_FILES|CLONE_SIGNAL);
 	init_task_union.task.state=TASK_RUNNING;
-	p=container_of(list_next(&current->list),struct task_struct,list);
+	//p=container_of(list_next(&current->list),struct task_struct,list);
+	p=(struct task_struct*)list_next(&current->list);
 	switch_to(current,p);
 }

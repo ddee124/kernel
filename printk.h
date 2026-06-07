@@ -22,4 +22,14 @@ extern int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char* fm
 #define ZEROPAD 16
 #define SMALL 32
 #define SIGN 64
+
+#define RED 0xff0000
+#define GREEN 0x00ff00
+#define BLUE 0x0000ff
+#define BLACK 0x000000
+#define WHITE 0xffffff
+#define YELLOW 0xffff00
+#define CYAN 0x00ffff
+#define PINK 0xff00ff
+#define ORANGE 0xff7f00
 #endif

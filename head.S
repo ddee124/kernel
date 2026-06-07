@@ -19,8 +19,8 @@ header_start:
 	.short 5
 	.short 0
 	.long 20
-	.long 1920
-	.long 1080
+	.long 1440
+	.long 900
 	.long 32
 	//end
 	.align 8
@@ -52,6 +52,19 @@ _start:
 .code64
 .globl _start64
 _start64:
+	movq $0x10,%rax
+    movq %rax,%ds
+    movq %rax,%es
+    movq %rax,%fs
+    movq %rax,%ss
+    movq $0x7e00,%rsp
+    pushq $0x8
+    movabsq $_start64h,%rax
+    pushq %rax
+    lretq
+.globl _start64h
+_start64h:
+    lgdt GDT_POINTER(%rip)
 	movq $0x10,%rax
     movq %rax,%ds
     movq %rax,%es
@@ -104,24 +117,40 @@ _stack_start:
 .align 8
 .org 0x1000
 __PML4E:
-    .quad 0x103007
+    .quad 0x103003
     .fill 255,8,0
-    .quad 0x103007
+    .quad 0x103003
     .fill 255,8,0
 .org 0x2000
 __PDPTE:
-    .quad 0x104007
+    .quad 0x104003
     .fill 511,8,0
 .org 0x3000
 __PDE:
-    .quad 0x0000087
-    .quad 0x0200087
-    .quad 0x0400087
-    .quad 0x0600087
-    .quad 0x0800087
-    .quad 0x0a00087
-    .quad 0x0c00087
-    .quad 0x0e00087
+    .quad 0x0000083
+    .quad 0x0200083
+    .quad 0x0400083
+    .quad 0x0600083
+    .quad 0x0800083
+    .quad 0x0a00083
+    .quad 0x0c00083
+    .quad 0x0e00083
+    .quad 0x1000083
+    .quad 0x1200083
+    .quad 0x1400083
+    .quad 0x1600083
+    .quad 0x1800083
+    .quad 0x1a00083
+    .quad 0x1c00083
+    .quad 0x1e00083
+    .quad 0x2000083
+    .quad 0x2200083
+    .quad 0x2400083
+    .quad 0x2600083
+    .quad 0x2800083
+    .quad 0x2a00083
+    .quad 0x2c00083
+    .quad 0x2e00083
     .fill 504,8,0
 //GDT Table
 .section .data

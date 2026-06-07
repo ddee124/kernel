@@ -10,6 +10,39 @@ extern char _text;
 extern char _etext;
 extern char _edata;
 extern char _end;
+/*void test_memory(){
+	void* tmp=0;int i=0;struct Slab* slab;
+	color_printk(WHITE,BLACK,"kmalloc test\n");
+	for(i = 0;i< 16;i++)
+	{
+		color_printk(RED,BLACK,"size:%#010x\t",kmalloc_cache_size[i].size);
+		color_printk(RED,BLACK,"color_map(before):%#018lx\t",*kmalloc_cache_size[i].cache_pool->color_map);
+		tmp = kmalloc(kmalloc_cache_size[i].size,0);
+		if(tmp ==0)
+			color_printk(RED,BLACK,"kmalloc size:%#010x ERROR\n",kmalloc_cache_size[i].size);
+		color_printk(RED,BLACK,"color_map(middle):%#018lx\t",*kmalloc_cache_size[i].cache_pool->color_map);
+		kfree(tmp);
+		color_printk(RED,BLACK,"color_map(after):%#018lx\n",*kmalloc_cache_size[i].cache_pool->color_map);
+	}
+
+	kmalloc(kmalloc_cache_size[15].size,0);
+	kmalloc(kmalloc_cache_size[15].size,0);
+	kmalloc(kmalloc_cache_size[15].size,0);
+	kmalloc(kmalloc_cache_size[15].size,0);
+	kmalloc(kmalloc_cache_size[15].size,0);
+	kmalloc(kmalloc_cache_size[15].size,0);
+	kmalloc(kmalloc_cache_size[15].size,0);
+
+
+	color_printk(RED,BLACK,"color_map(0):%#018lx,%#018lx\n",kmalloc_cache_size[15].cache_pool->color_map,*kmalloc_cache_size[15].cache_pool->color_map);
+	slab=(struct Slab*)(list_next(&kmalloc_cache_size[15].cache_pool->list));
+	color_printk(RED,BLACK,"color_map(1):%#018lx,%#018lx\n",slab->color_map,*slab->color_map);
+	slab=(struct Slab*)(list_next(&slab->list));
+	color_printk(RED,BLACK,"color_map(2):%#018lx,%#018lx\n",slab->color_map,*slab->color_map);
+	slab=(struct Slab*)(list_next(&slab->list));
+	color_printk(RED,BLACK,"color_map(3):%#018lx,%#018lx\n",slab->color_map,*slab->color_map);
+
+}*/
 void Start_Kernel(unsigned long mbi_addr){
 	//Global_CR3=Get_gdt();
 	//for(unsigned long i=0;i<0x80000000;i+=0x200000)	map_2M_page(i);
@@ -43,6 +76,9 @@ void Start_Kernel(unsigned long mbi_addr){
 	color_printk(0xff00,0,"FB_addr:%#018lx\n",Pos.FB_addr);
 	init_cpu();
 	init_interrupt();
-	task_init();
+	//test_memory();
+	//task_init();
+	unsigned long u,v;
+	__asm__ __volatile("sidt %0":"=m"(u)::"memory");
 	while(1);
 }

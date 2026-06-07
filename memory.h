@@ -22,8 +22,6 @@ int ZONE_UNMAPED_INDEX=0;
 extern unsigned long* Global_CR3;
 extern struct Global_Memory_Descriptor memory_management_struct;
 extern void init_memory(struct multiboot2_tag_mmap *mmap_tag);
-extern void map_2M_page(unsigned long phys_addr);
-extern struct Page* alloc_pages(int zone_select,int number,unsigned long page_flags);
 struct E820{
 	unsigned long address;
 	unsigned long length;
@@ -87,12 +85,12 @@ inline unsigned long* Get_gdt(){
 }
 extern inline unsigned long* Get_gdt();
 typedef struct{unsigned long pml4t;} pml4t_t;
-/*#define PG_PTable_Maped 1
+#define PG_PTable_Maped 1
 #define PG_Kernel_Init 2
 #define PG_Device 4
 #define PG_Kernel 8
-#define PG_Shared 16*/
-#define PG_PTable_Maped 1
+#define PG_Shared 16
+/*#define PG_PTable_Maped 1
 #define PG_Kernel_Init 2
 #define PG_Referenced 4
 #define PG_Dirty 8
@@ -101,7 +99,7 @@ typedef struct{unsigned long pml4t;} pml4t_t;
 #define PG_Device 64
 #define PG_Kernel 128
 #define PG_K_Share_To_U 256
-#define PG_Slab 512
+#define PG_Slab 512*/
 
 #define PAGE_XD (1ul<<63)
 #define PAGE_PAT (1ul<<12)
@@ -129,5 +127,50 @@ typedef struct{unsigned long pml4t;} pml4t_t;
 #define ZONE_NORMAL 2
 #define ZONE_UNMAPED 4
 
+struct Slab{
+	struct List list;
+	struct Page* page;
+	unsigned long using_count;
+	unsigned long free_count;
+	void* Vaddress;
+	unsigned long color_length;
+	unsigned long color_count;
+	unsigned long *color_map;
+};
+struct Slab_cache{
+	unsigned long size;
+	unsigned long total_using;
+	unsigned long total_free;
+	struct Slab* cache_pool;
+	struct Slab* cache_dma_pool;
+	void*(*constructor)(void* Vaddress,unsigned long arg);
+	void*(*destructor)(void* Vaddress,unsigned long arg);
+};
+struct Slab_cache kmalloc_cache_size[16]={
+	{32,0,0,0,0,0,0},
+	{64,0,0,0,0,0,0},
+	{128,0,0,0,0,0,0},
+	{256,0,0,0,0,0,0},
+	{512,0,0,0,0,0,0},
+	{1024,0,0,0,0,0,0},
+	{2048,0,0,0,0,0,0},
+	{4096,0,0,0,0,0,0},
+	{8192,0,0,0,0,0,0},
+	{16384,0,0,0,0,0,0},
+	{32768,0,0,0,0,0,0},
+	{65536,0,0,0,0,0,0},
+	{131072,0,0,0,0,0,0},
+	{262144,0,0,0,0,0,0},
+	{524288,0,0,0,0,0,0},
+	{1048576,0,0,0,0,0,0}
+};
+extern unsigned long page_init(struct Page* page,unsigned long flags);
+extern unsigned long page_clean(struct Page* page);
+extern unsigned long get_page_attribute(struct Page* page);
+extern unsigned long set_page_attribute(struct Page* page,unsigned long flags);
+extern struct Page* alloc_pages(int zone_select,int number,unsigned long page_flags);
+extern void free_pages(struct Page* page,int number);
+extern void* kmalloc(unsigned long size,unsigned long gfp_flags);
+extern unsigned long kfree(void* address);
 
 #endif
