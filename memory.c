@@ -476,7 +476,7 @@ unsigned long slab_init(){
 		page->zone_struct->page_free_count--;
 		page_init(page,PG_PTable_Maped|PG_Kernel_Init|PG_Kernel);
 	}
-	color_printk(0xffff00,0,"2.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
+	//color_printk(0xffff00,0,"2.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
 	//temporary hack
 	/*for(i=0;i<16;i++){
 		virtual=(unsigned long*)((memory_management_struct.end_of_struct+PAGE_2M_SIZE*i+PAGE_2M_SIZE-1)&PAGE_2M_MASK);
@@ -498,8 +498,8 @@ unsigned long slab_init(){
 		kmalloc_cache_size[i].cache_pool->Vaddress=Phy_To_Virt(page->PHY_address);
 		//color_printk(0xff00,0,"address:%#018lx\n",page->PHY_address);
 	}
-	color_printk(0xffff00,0,"3.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
-	color_printk(0xffff00,0,"start_code:%#018lx,end_code:%#018lx,end_data:%#018lx,end_brk:%#018lx,end_of_struct:%#018lx\n",memory_management_struct.start_code,memory_management_struct.end_code,memory_management_struct.end_data,memory_management_struct.end_brk,memory_management_struct.end_of_struct);
+	//color_printk(0xffff00,0,"3.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
+	//color_printk(0xffff00,0,"start_code:%#018lx,end_code:%#018lx,end_data:%#018lx,end_brk:%#018lx,end_of_struct:%#018lx\n",memory_management_struct.start_code,memory_management_struct.end_code,memory_management_struct.end_data,memory_management_struct.end_brk,memory_management_struct.end_of_struct);
 	return 1;
 }
 unsigned long alloc_reserved_page(void){
@@ -596,13 +596,13 @@ void init_memory(struct multiboot2_tag_mmap *mmap_tag){
 	flush_tlb();
 	unsigned long* tmp=Pos.FB_addr;
 	*tmp=0x00ff00;
-	color_printk(0xff,0,"Display Memory Structure,%d entries\n",memory_management_struct.e820_length);
+	/*color_printk(0xff,0,"Display Memory Structure,%d entries\n",memory_management_struct.e820_length);
 	for(i=0;i<=memory_management_struct.e820_length;i++){
 		if(memory_management_struct.e820[i].type==1)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:RAM\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
 		if(memory_management_struct.e820[i].type==2)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:ROM or Reserved\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
 		if(memory_management_struct.e820[i].type==3)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:ACPI Reclaim Memory\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
 		if(memory_management_struct.e820[i].type==4)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:ACPI NVS Memory\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
-	}
+	}*/
 	color_printk(0xffff00,0,"OS Can Used Total RAM:%#018lx\n",totalmem);
 	totalmem=0;
 	for(i=0;i<=memory_management_struct.e820_length;i++){
@@ -692,10 +692,10 @@ void init_memory(struct multiboot2_tag_mmap *mmap_tag){
 		tmp_page->zone_struct->page_using_count++;
 		tmp_page->zone_struct->page_free_count--;
 	}
-	color_printk(0x00ffff,0,"Global_CR3\t:%#018lx\n",Global_CR3);
-	color_printk(0x00ffff,0,"*Global_CR3\t:%#018lx\n",*Phy_To_Virt(Global_CR3)&(~0xff));
-	color_printk(0x00ffff,0,"**Global_CR3\t:%#018lx\n",*Phy_To_Virt(*Phy_To_Virt(Global_CR3)&(~0xff))&(~0xff));
-	color_printk(0xffff00,0,"1.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
+	//color_printk(0x00ffff,0,"Global_CR3\t:%#018lx\n",Global_CR3);
+	//color_printk(0x00ffff,0,"*Global_CR3\t:%#018lx\n",*Phy_To_Virt(Global_CR3)&(~0xff));
+	//color_printk(0x00ffff,0,"**Global_CR3\t:%#018lx\n",*Phy_To_Virt(*Phy_To_Virt(Global_CR3)&(~0xff))&(~0xff));
+	//color_printk(0xffff00,0,"1.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
 	slab_init();
 	pagetable_init();
 	for(int i=0;i<10;i++)	*(Phy_To_Virt(Global_CR3)+i)=0ul;

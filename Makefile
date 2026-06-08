@@ -1,19 +1,29 @@
-system: head.o main.o printk.o memory.o entry.o trap.o interrupt.o task.o cpu.o
-	ld -b elf64-x86-64 -z muldefs -o system head.o main.o printk.o memory.o entry.o trap.o interrupt.o task.o cpu.o -T kernel.lds -g head.o main.o printk.o memory.o
+PIC := APIC
+CFLAGS := -mcmodel=large -fno-builtin -g -m64
+system: head.o main.o printk.o memory.o entry.o trap.o PIC.o interrupt.o task.o cpu.o
+	ld -b elf64-x86-64 -z muldefs -o system head.o main.o printk.o memory.o entry.o trap.o PIC.o interrupt.o task.o cpu.o -T kernel.lds
+ifeq ($(PIC),APIC)
+PIC.o: APIC.c
+	gcc $(CFLAGS)  -c APIC.c -o PIC.o
+else
+PIC.o: 8259A.c
+	gcc $(CFLAGS)  -c 8259A.c -o PIC.o
+endif
+interrupt.o: interrupt.S
+	gcc -E interrupt.S > interrupt.s
+	as -o interrupt.o interrupt.s
 cpu.o: cpu.c
-	gcc -mcmodel=large -fno-builtin -g -m64 -c cpu.c
+	gcc $(CFLAGS) -c cpu.c
 task.o: task.c
-	gcc -mcmodel=large -fno-builtin -g -m64 -c task.c
-interrupt.o: interrupt.c
-	gcc -mcmodel=large -fno-builtin -g -m64 -c interrupt.c
+	gcc $(CFLAGS)  -c task.c
 memory.o: memory.c
-	gcc -mcmodel=large -fno-builtin -g -m64 -c memory.c
+	gcc $(CFLAGS)  -c memory.c
 printk.o: printk.c
-	gcc -mcmodel=large -fno-builtin -g -m64 -c printk.c
+	gcc $(CFLAGS)  -c printk.c
 main.o: main.c
-	gcc -mcmodel=large -fno-builtin -g -m64 -c main.c
+	gcc $(CFLAGS)  -c main.c -D$(PIC)
 trap.o: trap.c
-	gcc -mcmodel=large -fno-builtin -g -m64 -c trap.c
+	gcc $(CFLAGS)  -c trap.c
 entry.o: entry.S
 	gcc -E entry.S > entry.s
 	as -o entry.o entry.s

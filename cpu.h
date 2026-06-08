@@ -4,7 +4,7 @@ extern inline void get_cpuid(unsigned int mop,unsigned int sop,unsigned int *a,u
 	__asm__ __volatile__(
 		"cpuid \n\t"
 		:"=a"(*a),"=b"(*b),"=c"(*c),"=d"(*d)
-		:"0"(mop),"2"(sop)
+		:"a"(mop),"c"(sop)
 		:"memory"
 	);
 }

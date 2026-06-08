@@ -95,6 +95,27 @@ unsigned char io_in8(unsigned short port){
 	);
 	return tmp;
 }
+void io_out32(unsigned short port,unsigned int value){
+	__asm__ __volatile__(
+		"outl %%eax,%%dx \n\t"
+		:
+		:"a"(value),"d"(port)
+		:"memory"
+	);
+}
+unsigned int io_in32(unsigned short port){
+	unsigned int tmp;
+	__asm__ __volatile__(
+		"inl %%dx,%%eax \n\t"
+		:"=a"(tmp)
+		:"d"(port)
+		:"memory"
+	);
+	return tmp;
+}
+void io_mfence(){
+	__asm__ __volatile__("mfence \n\t":::);
+}
 extern inline void wrmsr(unsigned long address,unsigned long value){
 	__asm__ __volatile__(
 		"wrmsr \n\t"

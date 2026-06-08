@@ -27,7 +27,7 @@ void do_bounds(struct pt_regs *rsp){
 	while(1);
 }
 void do_undefined_opcode(struct pt_regs *rsp){
-	color_printk(0xFF,0,"do_undefined_opcode(6),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
+	color_printk(0xFF0000,0,"do_undefined_opcode(6),errcode:%#018lx,RSP:%#018lx,RIP:%#018lx\n",rsp->errcode,rsp->rsp,rsp->rip);
 	while(1);
 }
 void do_dev_not_available(struct pt_regs *rsp){
