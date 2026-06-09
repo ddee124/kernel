@@ -7,28 +7,82 @@ struct IOAPIC_map{
 	unsigned int* virtual_EOI_addr;
 }ioapic_map;
 extern void APIC_init();
-extern void IRQ0x20_interrupt();
-extern void IRQ0x21_interrupt();
-extern void IRQ0x22_interrupt();
-extern void IRQ0x23_interrupt();
-extern void IRQ0x24_interrupt();
-extern void IRQ0x25_interrupt();
-extern void IRQ0x26_interrupt();
-extern void IRQ0x27_interrupt();
-extern void IRQ0x28_interrupt();
-extern void IRQ0x29_interrupt();
-extern void IRQ0x2a_interrupt();
-extern void IRQ0x2b_interrupt();
-extern void IRQ0x2c_interrupt();
-extern void IRQ0x2d_interrupt();
-extern void IRQ0x2e_interrupt();
-extern void IRQ0x2f_interrupt();
-extern void IRQ0x30_interrupt();
-extern void IRQ0x31_interrupt();
-extern void IRQ0x32_interrupt();
-extern void IRQ0x33_interrupt();
-extern void IRQ0x34_interrupt();
-extern void IRQ0x35_interrupt();
-extern void IRQ0x36_interrupt();
-extern void IRQ0x37_interrupt();
+extern void IOAPIC_enable(unsigned long irq);
+extern void IOAPIC_disable(unsigned long irq);
+extern unsigned long IOAPIC_install(unsigned long irq,void* arg);
+extern void IOAPIC_uninstall(unsigned long irq);
+extern void IOAPIC_edge_ack(unsigned long irq);
+struct APIC_LVT{
+	unsigned int vector :8,
+	deliver_mode :3,
+	reserved_1 :1,
+	deliver_status :1,
+	polarity :1,
+	irr :1,
+	trigger :1,
+	mask :1,
+	timer_mode :2,
+	reserved_2 :13;
+}__attribute__((packed));
+struct IO_APIC_RET_entry{
+	unsigned int vector :8,
+	deliver_mode :3,
+	dest_mode :1,
+	deliver_status :1,
+	polarity :1,
+	irr :1,
+	trigger :1,
+	mask :1,
+	reserved :15;
+	union{
+		struct{
+			unsigned int reserved_1 :24,
+			phy_dest :4,
+			reserved_2 :4;
+		}physical;
+		struct{
+			unsigned int reserved_1 :24,
+			logical_dest :8;
+		}logical;
+	}destination;
+}__attribute__((packed));
+
+//delivery mode
+#define	APIC_ICR_IOAPIC_Fixed 0 //LAPIC IOAPIC ICR
+#define	IOAPIC_ICR_Lowest_Priority 1 // IOAPIC ICR
+#define	APIC_ICR_IOAPIC_SMI 2 //LAPIC IOAPIC ICR
+#define	APIC_ICR_IOAPIC_NMI 4 //LAPIC IOAPIC ICR
+#define	APIC_ICR_IOAPIC_INIT 5 //LAPIC IOAPIC ICR
+#define	ICR_Start_up 6 // ICR
+#define	IOAPIC_ExtINT 7 // IOAPIC
+//timer mode
+#define APIC_LVT_Timer_One_Shot 0
+#define APIC_LVT_Timer_Periodic 1
+#define APIC_LVT_Timer_TSC_Deadline 2
+//mask
+#define APIC_ICR_IOAPIC_Masked 1
+#define APIC_ICR_IOAPIC_UN_Masked 0
+//trigger mode
+#define APIC_ICR_IOAPIC_Edge 0
+#define APIC_ICR_IOAPIC_Level 1
+//delivery status
+#define APIC_ICR_IOAPIC_Idle 0
+#define APIC_ICR_IOAPIC_Send_Pending 1
+//destination shorthand
+#define ICR_No_Shorthand 0
+#define ICR_Self 1
+#define ICR_ALL_INCLUDE_Self 2
+#define ICR_ALL_EXCLUDE_Self 3
+//destination mode
+#define ICR_IOAPIC_DELV_PHYSICAL 0
+#define ICR_IOAPIC_DELV_LOGIC 1
+//level
+#define ICR_LEVEL_DE_ASSERT 0
+#define ICR_LEVLE_ASSERT 1
+//remote irr
+#define APIC_IOAPIC_IRR_RESET 0
+#define APIC_IOAPIC_IRR_ACCEPT 1
+//pin polarity
+#define APIC_IOAPIC_POLARITY_HIGH 0
+#define APIC_IOAPIC_POLARITY_LOW 1
 #endif

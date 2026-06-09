@@ -2,6 +2,7 @@
 #include "lib.h"
 #include "gate.h"
 #include "8259A.h"
+#include "interrupt.h"
 void(*interrupt[24])(void)={
 	IRQ0x20_interrupt,IRQ0x21_interrupt,IRQ0x22_interrupt,IRQ0x23_interrupt,
 	IRQ0x24_interrupt,IRQ0x25_interrupt,IRQ0x26_interrupt,IRQ0x27_interrupt,

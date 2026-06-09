@@ -11,6 +11,7 @@
 #else
 #include "8259A.h"
 #endif
+#include "keyboard.h"
 extern char _text;
 extern char _etext;
 extern char _edata;
@@ -53,5 +54,6 @@ void Start_Kernel(unsigned long mbi_addr){
 	init_8259A();
 #endif
 	//task_init();
-	while(1);
+	keyboard_init();
+	while(1)	analysis_keycode();
 }

@@ -124,6 +124,7 @@ extern inline void wrmsr(unsigned long address,unsigned long value){
 		:"memory"
 	);
 }
+extern inline void nop(){__asm__ __volatile__("nop":::);};
 /*#define container_of(ptr,type,member)\
 ({\
 	typeof(((type*)0)->member)*p=(ptr);\

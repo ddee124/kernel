@@ -5,7 +5,70 @@
 #include "memory.h"
 #include "APIC.h"
 #include "ptrace.h"
-
+#include "interrupt.h"
+unsigned long ioapic_rte_read(unsigned char index){
+	unsigned long ret;
+	*(ioapic_map.virtual_index_addr)=index+1;
+	io_mfence();
+	ret=*(ioapic_map.virtual_data_addr);
+	ret<<=32;
+	io_mfence();
+	*(ioapic_map.virtual_index_addr)=index;
+	io_mfence();
+	ret|=*(ioapic_map.virtual_data_addr);
+	io_mfence();
+	return ret;
+}
+void ioapic_rte_write(unsigned char index,unsigned long value){
+	*(ioapic_map.virtual_index_addr)=index;
+	io_mfence();
+	*(ioapic_map.virtual_data_addr)=value&0xfffffffful;
+	value>>=32;
+	io_mfence();
+	*(ioapic_map.virtual_index_addr)=index+1;
+	io_mfence();
+	*(ioapic_map.virtual_data_addr)=value&0xfffffffful;
+	io_mfence();
+}
+void IOAPIC_enable(unsigned long irq){
+	unsigned long value=0;
+	value=ioapic_rte_read((irq-32)*2+0x10);
+	value=value&(~0x10000ul);
+	ioapic_rte_write((irq-32)*2+0x10,value);
+}
+void IOAPIC_disable(unsigned long irq){
+	unsigned long value=0;
+	value=ioapic_rte_read((irq-32)*2+0x10);
+	value=value|0x10000ul;
+	ioapic_rte_write((irq-32)*2+0x10,value);
+}
+unsigned long IOAPIC_install(unsigned long irq,void* arg){
+	struct IO_APIC_RET_entry* entry=(struct IO_APIC_RET_entry*)arg;
+	ioapic_rte_write((irq-32)*2+0x10,*(unsigned long*)entry);
+	return 1;
+}
+void IOAPIC_uninstall(unsigned long irq){
+	ioapic_rte_write((irq-32)*2+0x10,0x10000UL);
+}
+void IOAPIC_edge_ack(unsigned long irq){
+	__asm__ __volatile__(
+		"movq $0x00,%%rdx \n\t"
+		"movq $0x00,%%rax \n\t"
+		"movq $0x80b,%%rcx \n\t"
+		"wrmsr \n\t"
+		:::"memory"
+	);
+}
+void IOAPIC_level_ack(unsigned long irq){
+	__asm__ __volatile__(
+		"movq $0x00,%%rdx \n\t"
+		"movq $0x00,%%rax \n\t"
+		"movq $0x80b,%%rcx \n\t"
+		"wrmsr \n\t"
+		:::"memory"
+	);
+	*ioapic_map.virtual_EOI_addr=0;
+}
 void(*interrupt[24])(void)={
 	IRQ0x20_interrupt,IRQ0x21_interrupt,IRQ0x22_interrupt,IRQ0x23_interrupt,
 	IRQ0x24_interrupt,IRQ0x25_interrupt,IRQ0x26_interrupt,IRQ0x27_interrupt,
@@ -15,17 +78,9 @@ void(*interrupt[24])(void)={
 	IRQ0x34_interrupt,IRQ0x35_interrupt,IRQ0x36_interrupt,IRQ0x37_interrupt
 };
 void do_IRQ(struct pt_regs *regs,unsigned long nr){
-	unsigned char x;
-	x=io_in8(0x60);
-	color_printk(BLUE,WHITE,"(IRQ:%#04x)\tkey code:%#04x\n",nr,x);
-	if(nr==0x21&&x==0x13)	io_out8(0xCF9,0x0E);
-	__asm__ __volatile__(
-		"movq $0x00,%%rdx \n\t"
-		"movq $0x00,%%rax \n\t"
-		"movq $0x80b,%%rcx \n\t"
-		"wrmsr \n\t"
-		:::"memory"
-	);
+	struct irq_desc_T* irq=&interrupt_desc[nr-32];
+	if(irq->handler!=0)	irq->handler(nr,irq->parameter,regs);
+	if(irq->controller!=0&&irq->controller->ack!=0)	irq->controller->ack(nr);
 }
 
 void Local_APIC_init(){
@@ -60,7 +115,7 @@ void Local_APIC_init(){
 		"movq $0x80f,%%rcx \n\t"
 		"rdmsr \n\t"
 		"bts $8,%%rax \n\t"
-		"bts $12,%%rax \n\t"
+		//"bts $12,%%rax \n\t"
 		"wrmsr \n\t"
 		"movq $0x80f,%%rcx \n\t"
 		"rdmsr \n\t"
@@ -69,8 +124,8 @@ void Local_APIC_init(){
 		:"memory"
 	);
 	color_printk(WHITE,BLACK,"eax:%#010x,edx:%#010x\t",x,y);
-	if(x&0x100)	color_printk(WHITE,BLACK,"SVR[8] enabled\t");
-	if(x&0x1000)	color_printk(WHITE,BLACK,"SVR[12] enabled\n");
+	if(x&0x100)	color_printk(WHITE,BLACK,"SVR[8] enabled\n");
+	//if(x&0x1000)	color_printk(WHITE,BLACK,"SVR[12] enabled\n");
 	//get local APIC ID
 	__asm__ __volatile__(
 		"movq $0x802,%%rcx \n\t"
@@ -164,30 +219,6 @@ void IO_APIC_pagetable_map(){
 	color_printk(BLUE,BLACK,"ioapic_map.virtual_address:%#018lx\t\t\n",(unsigned long)ioapic_map.virtual_index_addr);
 	flush_tlb();
 }
-unsigned long ioapic_rte_read(unsigned char index){
-	unsigned long ret;
-	*(ioapic_map.virtual_index_addr)=index+1;
-	io_mfence();
-	ret=*(ioapic_map.virtual_data_addr);
-	ret<<=32;
-	io_mfence();
-	*(ioapic_map.virtual_index_addr)=index;
-	io_mfence();
-	ret|=*(ioapic_map.virtual_data_addr);
-	io_mfence();
-	return ret;
-}
-void ioapic_rte_write(unsigned char index,unsigned long value){
-	*(ioapic_map.virtual_index_addr)=index;
-	io_mfence();
-	*(ioapic_map.virtual_data_addr)=value&0xfffffffful;
-	value>>=32;
-	io_mfence();
-	*(ioapic_map.virtual_index_addr)=index+1;
-	io_mfence();
-	*(ioapic_map.virtual_data_addr)=value&0xfffffffful;
-	io_mfence();
-}
 void IO_APIC_init(){
 	int i;
 	//I/O APIC ID
@@ -201,10 +232,11 @@ void IO_APIC_init(){
 	*ioapic_map.virtual_index_addr=0x01;
 	io_mfence();
 	color_printk(GREEN,BLACK,"Get IOAPIC Version REG:%#010x,MAX redirection enties:%#08d\n",*ioapic_map.virtual_data_addr,((*ioapic_map.virtual_data_addr>>16)&0xff)+1);
+	io_mfence();
 	//RTE
 	for(i=0x10;i<0x40;i+=2)	ioapic_rte_write(i,0x10020+((i-0x10)>>1));
-	ioapic_rte_write(0x12,0x21);//enable keyboard
-	ioapic_rte_write(0x28,0x32);//enable mouse
+	//ioapic_rte_write(0x12,0x21);//enable keyboard
+	//ioapic_rte_write(0x28,0x2c);//enable mouse
 	color_printk(GREEN,BLACK,"I/O APIC Redirection Table Entries Set Finished.\n");	
 }
 void APIC_init(){
@@ -217,29 +249,11 @@ void APIC_init(){
 	color_printk(GREEN,BLACK,"MASK 8259A\n");
 	io_out8(0x21,0xff);
 	io_out8(0xa1,0xff);
-	//enable IMCR
-	io_out8(0x22,0x70);
-	io_out8(0x23,0x01);
 	//init local apic
 	Local_APIC_init();
 	//init io apic
 	IO_APIC_init();
-	/*//get RCBA address
-	io_out32(0xcf8,0x8000f8f0);
-	x=io_in32(0xcfc);
-	color_printk(RED,BLACK,"Get RCBA Address:%#010x\n",x);
-	x=x&0xffffc000;
-	color_printk(RED,BLACK,"Get RCBA Address:%#010x\n",x);
-	//get OIC address
-	if(x>0xfec00000&&x<0xfee00000)	p=(unsigned int*)Phy_To_Virt(x+0x31feul);
-	//enable IOAPIC
-	x=(*p&0xffffff00)|0x100;
-	io_mfence();
-	*p=x;
-	io_mfence();*/
+	memset(interrupt_desc,0,sizeof(struct irq_desc_T)*NR_IRQS);
 	//enable IF rflags
 	sti();
-	unsigned long* ddd=(unsigned long*)IDT_Table;
-	color_printk(0xff00,0,"%#018lx\t%#018lx\n",ddd[66+1],ddd[66]);
-	color_printk(0xff00,0,"%#018lx\n",IRQ0x21_interrupt);
 }
