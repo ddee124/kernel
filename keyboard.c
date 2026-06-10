@@ -4,7 +4,7 @@
 #include "memory.h"
 #include "interrupt.h"
 #include "printk.h"
-static struct keyboard_inputbuffer* p_kb=0;
+struct keyboard_inputbuffer* p_kb=0;
 static int shift_l,shift_r,ctrl_l,ctrl_r,alt_l,alt_r;
 void keyboard_exit(){
 	unregister_irq(0x21);
@@ -59,7 +59,7 @@ void keyboard_init(){
 unsigned char get_scancode(){
 	unsigned char ret=0;
 	while(!p_kb->count)	nop();
-	if(p_kb->p_tail==p_kb->buf+KB_BUF_SIZE)	p_kb->p_tail==p_kb->buf;
+	if(p_kb->p_tail==p_kb->buf+KB_BUF_SIZE)	p_kb->p_tail=p_kb->buf;
 	ret=*p_kb->p_tail;
 	p_kb->count--;
 	p_kb->p_tail++;

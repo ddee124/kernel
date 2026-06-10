@@ -28,6 +28,7 @@ struct keyboard_inputbuffer{
 unsigned char pausebreak_scode[]={0xE1,0x1D,0x45,0xE1,0x9D,0xC5};
 extern void keyboard_init();
 extern void analysis_keycode();
+extern struct keyboard_inputbuffer* p_kb;
 unsigned int keycode_map_normal[NR_SCAN_CODES*MAP_COLS]={
 	/*0x00*/ 0,         0,
 	/*0x01*/ 0,         0, //ESC

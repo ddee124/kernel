@@ -19,8 +19,8 @@ header_start:
 	.short 5
 	.short 0
 	.long 20
-	.long 1920
-	.long 1080
+	.long 1440
+	.long 900
 	.long 32
 	//end
 	.align 8

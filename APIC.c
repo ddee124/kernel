@@ -205,16 +205,16 @@ void IO_APIC_pagetable_map(){
 		unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
 		tmp[pml4_idx]=Virt_To_Phy(virtual)|PAGE_KERNEL_Dir;
 	}
-	color_printk(YELLOW,BLACK,"1:%#018lx\t%#018lx\n",(unsigned long)(tmp+pml4_idx),(unsigned long)tmp[pml4_idx]);
+	//color_printk(YELLOW,BLACK,"1:%#018lx\t%#018lx\n",(unsigned long)(tmp+pml4_idx),(unsigned long)tmp[pml4_idx]);
 	tmp=Phy_To_Virt((unsigned long)tmp[pml4_idx]&(~0xffful));
 	if(tmp[pdpt_idx]==0){
 		unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
 		tmp[pdpt_idx]=Virt_To_Phy(virtual)|PAGE_KERNEL_Dir;
 	}
-	color_printk(YELLOW,BLACK,"2:%#018lx\t%#018lx\n",(unsigned long)(tmp+pdpt_idx),(unsigned long)tmp[pdpt_idx]);
+	//color_printk(YELLOW,BLACK,"2:%#018lx\t%#018lx\n",(unsigned long)(tmp+pdpt_idx),(unsigned long)tmp[pdpt_idx]);
 	tmp=Phy_To_Virt((unsigned long)tmp[pdpt_idx]&(~0xffful));
 	tmp[pd_idx]=Virt_To_Phy(IOAPIC_addr)|PAGE_KERNEL_Page|PAGE_PWT|PAGE_PCD;
-	color_printk(YELLOW,BLACK,"3:%#018lx\t%#018lx\n",(unsigned long)(tmp+pd_idx),(unsigned long)tmp[pd_idx]);
+	//color_printk(YELLOW,BLACK,"3:%#018lx\t%#018lx\n",(unsigned long)(tmp+pd_idx),(unsigned long)tmp[pd_idx]);
 	color_printk(BLUE,BLACK,"ioapic_map.physical_address:%#010x\t\t\n",ioapic_map.phy_addr);
 	color_printk(BLUE,BLACK,"ioapic_map.virtual_address:%#018lx\t\t\n",(unsigned long)ioapic_map.virtual_index_addr);
 	flush_tlb();

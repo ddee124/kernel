@@ -3,15 +3,12 @@
 #include "printk.h"
 #include "memory.h"
 #include "gate.h"
-#include "8259A.h"
 #include "task.h"
 #include "cpu.h"
-#if APIC
 #include "APIC.h"
-#else
-#include "8259A.h"
-#endif
 #include "keyboard.h"
+#include "mouse.h"
+extern void SMP_Init();
 extern char _text;
 extern char _etext;
 extern char _edata;
@@ -47,13 +44,18 @@ void Start_Kernel(unsigned long mbi_addr){
 	memory_management_struct.end_brk=(unsigned long)&_end;
 	init_memory(mmap_tag);
 	color_printk(0xff00,0,"FB_addr:%#018lx\n",Pos.FB_addr);
+	color_printk(0xff00,0,"Display CPU information\n");
 	init_cpu();
-#if APIC
+	color_printk(0xff00,0,"Init APIC\n");
 	APIC_init();
-#else
-	init_8259A();
-#endif
 	//task_init();
+	SMP_Init();
+	color_printk(0xff00,0,"Init keyboard\n");
 	keyboard_init();
-	while(1)	analysis_keycode();
+	color_printk(0xff00,0,"Init mouse\n");
+	mouse_init();
+	while(1){
+		if(p_kb->count)	analysis_keycode();
+		if(p_mouse->count)	analysis_mousecode();
+	}
 }

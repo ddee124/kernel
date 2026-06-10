@@ -1,16 +1,14 @@
-PIC := APIC
 CFLAGS := -mcmodel=large -fno-builtin -g -m64
-system: head.o main.o printk.o memory.o entry.o trap.o PIC.o interrupt.o task.o cpu.o keyboard.o
-	ld -b elf64-x86-64 -z muldefs -o system head.o main.o printk.o memory.o entry.o trap.o PIC.o interrupt.o task.o cpu.o keyboard.o -T kernel.lds
+system: head.o main.o printk.o memory.o entry.o trap.o APIC.o interrupt.o task.o cpu.o keyboard.o mouse.o SMP.o
+	ld -b elf64-x86-64 -z muldefs -o system head.o main.o printk.o memory.o entry.o trap.o APIC.o interrupt.o task.o cpu.o keyboard.o mouse.o SMP.o -T kernel.lds
+SMP.o: SMP.c
+	gcc $(CFLAGS) -c SMP.c -o SMP.o
+mouse.o: mouse.c
+	gcc $(CFLAGS) -c mouse.c -o mouse.o
 keyboard.o: keyboard.c
 	gcc $(CFLAGS) -c keyboard.c -o keyboard.o
-ifeq ($(PIC),APIC)
-PIC.o: APIC.c
-	gcc $(CFLAGS)  -c APIC.c -o PIC.o
-else
-PIC.o: 8259A.c
-	gcc $(CFLAGS)  -c 8259A.c -o PIC.o
-endif
+APIC.o: APIC.c
+	gcc $(CFLAGS)  -c APIC.c -o APIC.o
 interrupt.o: interrupt.c
 	gcc $(CFLAGS) -c interrupt.c
 cpu.o: cpu.c
@@ -22,7 +20,7 @@ memory.o: memory.c
 printk.o: printk.c
 	gcc $(CFLAGS)  -c printk.c
 main.o: main.c
-	gcc $(CFLAGS)  -c main.c -D$(PIC)
+	gcc $(CFLAGS)  -c main.c
 trap.o: trap.c
 	gcc $(CFLAGS)  -c trap.c
 entry.o: entry.S
