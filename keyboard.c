@@ -89,7 +89,7 @@ void analysis_keycode(){
 						if(get_scancode()==0x37){
 							key=PRINTSCREEN;
 							make=1;
-							io_out8(0xCF9,0x06);
+							io_out8(0xCF9,0x0E);
 						}
 					}
 					break;

@@ -65,7 +65,7 @@ __asm__(
 );
 inline void __switch_to(struct task_struct *prev,struct task_struct *next){
 	init_tss[0].rsp0=next->thread->rsp0;
-	set_tss64(init_tss[0].rsp0,init_tss[0].rsp1,init_tss[0].rsp2,init_tss[0].ist1,init_tss[0].ist2,init_tss[0].ist3,init_tss[0].ist4,init_tss[0].ist5,init_tss[0].ist6,init_tss[0].ist7);
+	set_tss64(TSS64_Table,init_tss[0].rsp0,init_tss[0].rsp1,init_tss[0].rsp2,init_tss[0].ist1,init_tss[0].ist2,init_tss[0].ist3,init_tss[0].ist4,init_tss[0].ist5,init_tss[0].ist6,init_tss[0].ist7);
 	__asm__ __volatile__ ("movq %%fs,%0 \n\t":"=a"(prev->thread->fs));
 	__asm__ __volatile__ ("movq %%gs,%0 \n\t":"=a"(prev->thread->gs));
 	__asm__ __volatile__ ("movq %0,%%fs \n\t"::"a"(next->thread->fs));
@@ -153,7 +153,7 @@ void task_init(){
 	wrmsr(0xC0000082,(unsigned long)system_call);
 	wrmsr(0xC0000084,0);
 	syscall_rsp=current->thread->rsp0;
-	set_tss64(init_thread.rsp0,init_tss[0].rsp1,init_tss[0].rsp2,init_tss[0].ist1,init_tss[0].ist2,init_tss[0].ist3,init_tss[0].ist4,init_tss[0].ist5,init_tss[0].ist6,init_tss[0].ist7);
+	set_tss64(TSS64_Table,init_thread.rsp0,init_tss[0].rsp1,init_tss[0].rsp2,init_tss[0].ist1,init_tss[0].ist2,init_tss[0].ist3,init_tss[0].ist4,init_tss[0].ist5,init_tss[0].ist6,init_tss[0].ist7);
 	init_tss[0].rsp0=init_thread.rsp0;
 	list_init(&init_task_union.task.list);
 	kernel_thread(init,10,CLONE_FS|CLONE_FILES|CLONE_SIGNAL);

@@ -8,7 +8,7 @@ header_start:
 	.long LENGTH
 	.long -(MAGIC+ARCH+LENGTH)
 	//information
-	//.align 8
+	.align 8
 	.short 1
 	.short 0
 	.long 16
@@ -41,7 +41,7 @@ _start:
     movl %eax,%cr4
     movl $(__PML4E-0xffff800000000000),%eax
     movl %eax,%cr3
-    mov $0x0C0000080,%ecx
+    mov $0xC0000080,%ecx
     rdmsr
     orl $0x100,%eax
     wrmsr
@@ -76,6 +76,14 @@ _start64h:
 	//load GDTR
 	lidt IDT_POINTER(%rip)
     movq _stack_start(%rip),%rsp
+    movq $0xc0000080,%rcx
+    rdmsr
+    orq $1,%rax
+    wrmsr
+    movq $0x1b,%rcx
+    rdmsr
+    bt $8,%rax
+    jnc start_smp
 setup_TSS64:
     leaq TSS64_Table(%rip),%rdx
     xorq %rax,%rax
@@ -98,10 +106,7 @@ setup_TSS64:
     movq %rdx,88(%rdi)
     //mov $0x50,%ax
     //ltr %ax
-    movq $0xc0000080,%rcx
-    rdmsr
-    orq $1,%rax
-    wrmsr
+    
     movq %r15,%rdi
     movq go_to_kernel(%rip),%rax
     pushq $0x08
@@ -109,8 +114,13 @@ setup_TSS64:
     lretq
 go_to_kernel:
     .quad Start_Kernel
-int_msg:
-    .asciz "Unknown interrupt or fault at RIP\n"
+start_smp:
+	movq go_to_smp_kernel(%rip),%rax
+	pushq $0x08
+	pushq %rax
+	lretq
+go_to_smp_kernel:
+	.quad Start_SMP
 .globl _stack_start
 _stack_start:
     .quad init_task_union+32768
@@ -165,7 +175,7 @@ GDT_Table:
     .quad 0x0020f80000000000 /*USER Code 64-bit Segment 28*/
     .quad 0x00cf9a000000ffff /*KERNEL Code 32-bit Segment 30*/
     .quad 0x00cf92000000ffff /*KERNEL Data 32-bit Segment 38*/
-    .fill 10,8,0
+    .fill 100,8,0
 GDT_END:
 GDT_POINTER:
 GDT_LIMIT: .word GDT_END - GDT_Table -1

@@ -6,6 +6,10 @@
 #include "APIC.h"
 #include "ptrace.h"
 #include "interrupt.h"
+#include "ACPI.h"
+#include "task.h"
+int global_i;
+unsigned int bsp_id;
 unsigned long ioapic_rte_read(unsigned char index){
 	unsigned long ret;
 	*(ioapic_map.virtual_index_addr)=index+1;
@@ -82,16 +86,16 @@ void do_IRQ(struct pt_regs *regs,unsigned long nr){
 	if(irq->handler!=0)	irq->handler(nr,irq->parameter,regs);
 	if(irq->controller!=0&&irq->controller->ack!=0)	irq->controller->ack(nr);
 }
-
 void Local_APIC_init(){
 	unsigned int x,y,a,b,c,d;
 	//check x2APIC support
 	get_cpuid(1,0,&a,&b,&c,&d);
-	color_printk(WHITE,BLACK,"CPUID 01,eax:%#010x,ebx:%#010x,ecx:%#010x,edx:%#010x\n",a,b,c,d);
-	if((1<<9)&d)	color_printk(WHITE,BLACK,"Hardware support APIC&xAPIC\t");
-	else    color_printk(WHITE,BLACK,"Hardware NOT support APIC&xAPIC\t");
 	if((1<<21)&c)	color_printk(WHITE,BLACK,"Hardware support x2APIC\n");
-	else    color_printk(WHITE,BLACK,"Hardware NOT support x2APIC\n");
+	else{
+		color_printk(RED,BLACK,"Hardware NOT support x2APIC\n");
+		while(1);
+	}
+	color_printk(CYAN,BLACK,"io apic address:%#018lx\n",(unsigned long)Phy_To_Virt(ioapic_map.phy_addr));
 	//enable x2APIC
 	__asm__ __volatile__(
 		"movq $0x1b,%%rcx \n\t"
@@ -103,13 +107,11 @@ void Local_APIC_init(){
 		:
 		:"memory"
 	);
-	color_printk(WHITE,BLACK,"eax:%#010x,edx:%#010x\t",x,y);
 	if(x&0xc00)	color_printk(WHITE,BLACK,"xAPIC & x2APIC enabled\n");
 	else{
 		color_printk(RED,BLACK," x2APIC enable failed!\n");
 		while(1);
 	}
-	//enable APIC and disable EOI broadcast
 	//enable SVR[8] SVR[12]
 	__asm__ __volatile__(
 		"movq $0x80f,%%rcx \n\t"
@@ -123,7 +125,7 @@ void Local_APIC_init(){
 		:
 		:"memory"
 	);
-	color_printk(WHITE,BLACK,"eax:%#010x,edx:%#010x\t",x,y);
+	//color_printk(WHITE,BLACK,"eax:%#010x,edx:%#010x\t",x,y);
 	if(x&0x100)	color_printk(WHITE,BLACK,"SVR[8] enabled\n");
 	//if(x&0x1000)	color_printk(WHITE,BLACK,"SVR[12] enabled\n");
 	//get local APIC ID
@@ -135,6 +137,7 @@ void Local_APIC_init(){
 		:"memory"
 	);
 	color_printk(WHITE,BLACK,"eax:%#010x,edx:%#010x\tx2APIC ID:%#010x\n",x,y,x);
+	bsp_id=x;
 	//get local APIC version
 	__asm__ __volatile__(
 		"movq $0x803,%%rcx \n\t"
@@ -186,12 +189,12 @@ void Local_APIC_init(){
 		:
 		:"memory"
 	);
-	color_printk(GREEN,BLACK,"Set LVT PPR:%#010x\t",x);
+	color_printk(GREEN,BLACK,"Set LVT PPR:%#010x\n",x);
 }
-void IO_APIC_pagetable_map(){
+void APIC_pagetable_map(){
 	unsigned long* tmp;
-	unsigned char* IOAPIC_addr=(unsigned char*)Phy_To_Virt(0xfec00000);
-	ioapic_map.phy_addr=0xfec00000;
+	//ioapic_map.phy_addr=0xfec00000;
+	unsigned char* IOAPIC_addr=(unsigned char*)Phy_To_Virt(ioapic_map.phy_addr);
 	ioapic_map.virtual_index_addr=IOAPIC_addr;
 	ioapic_map.virtual_data_addr=(unsigned int*)(IOAPIC_addr+0x10);
 	ioapic_map.virtual_EOI_addr=(unsigned int*)(IOAPIC_addr+0x40);
@@ -203,20 +206,22 @@ void IO_APIC_pagetable_map(){
 	tmp=Phy_To_Virt((unsigned long)Global_CR3&(~0xffful));
 	if(tmp[pml4_idx]==0){
 		unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
+		memset(virtual,0,PAGE_4K_SIZE);
 		tmp[pml4_idx]=Virt_To_Phy(virtual)|PAGE_KERNEL_Dir;
 	}
 	//color_printk(YELLOW,BLACK,"1:%#018lx\t%#018lx\n",(unsigned long)(tmp+pml4_idx),(unsigned long)tmp[pml4_idx]);
 	tmp=Phy_To_Virt((unsigned long)tmp[pml4_idx]&(~0xffful));
 	if(tmp[pdpt_idx]==0){
 		unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
+		memset(virtual,0,PAGE_4K_SIZE);
 		tmp[pdpt_idx]=Virt_To_Phy(virtual)|PAGE_KERNEL_Dir;
 	}
 	//color_printk(YELLOW,BLACK,"2:%#018lx\t%#018lx\n",(unsigned long)(tmp+pdpt_idx),(unsigned long)tmp[pdpt_idx]);
 	tmp=Phy_To_Virt((unsigned long)tmp[pdpt_idx]&(~0xffful));
-	tmp[pd_idx]=Virt_To_Phy(IOAPIC_addr)|PAGE_KERNEL_Page|PAGE_PWT|PAGE_PCD;
+	if(!(tmp[pd_idx]&PAGE_Present)) tmp[pd_idx]=Virt_To_Phy(IOAPIC_addr)|PAGE_KERNEL_Page|PAGE_PWT|PAGE_PCD;
 	//color_printk(YELLOW,BLACK,"3:%#018lx\t%#018lx\n",(unsigned long)(tmp+pd_idx),(unsigned long)tmp[pd_idx]);
-	color_printk(BLUE,BLACK,"ioapic_map.physical_address:%#010x\t\t\n",ioapic_map.phy_addr);
-	color_printk(BLUE,BLACK,"ioapic_map.virtual_address:%#018lx\t\t\n",(unsigned long)ioapic_map.virtual_index_addr);
+	//color_printk(BLUE,BLACK,"ioapic_map.physical_address:%#010x\t\t\n",ioapic_map.phy_addr);
+	//color_printk(BLUE,BLACK,"ioapic_map.virtual_address:%#018lx\t\t\n",(unsigned long)ioapic_map.virtual_index_addr);
 	flush_tlb();
 }
 void IO_APIC_init(){
@@ -243,7 +248,7 @@ void APIC_init(){
 	int i;
 	unsigned int x;
 	unsigned int* p;
-	IO_APIC_pagetable_map();
+	APIC_pagetable_map();
 	for(i=32;i<56;i++)	set_intr_gate(i,2,interrupt[i-32]);
 	//mask 8259A
 	color_printk(GREEN,BLACK,"MASK 8259A\n");
@@ -254,6 +259,7 @@ void APIC_init(){
 	//init io apic
 	IO_APIC_init();
 	memset(interrupt_desc,0,sizeof(struct irq_desc_T)*NR_IRQS);
+	boot_ap(bsp_id);
 	//enable IF rflags
 	sti();
 }

@@ -46,6 +46,25 @@ struct IO_APIC_RET_entry{
 		}logical;
 	}destination;
 }__attribute__((packed));
+struct INT_CMD_REG{
+	unsigned int vector :8,
+		deliver_mode :3,
+		dest_mode :1,
+		deliver_status	:1,
+		res_1 :1,
+		level :1,
+		trigger :1,
+		res_2 :2,
+		dest_shorthand :2,
+		res_3 :12;
+	union{
+		struct{
+			unsigned int res_4 :24,
+			dest_field :8;
+		}apic_destination;
+		unsigned int x2apic_destination;
+	}destination;
+}__attribute__((packed));
 
 //delivery mode
 #define	APIC_ICR_IOAPIC_Fixed 0 //LAPIC IOAPIC ICR
@@ -78,7 +97,7 @@ struct IO_APIC_RET_entry{
 #define ICR_IOAPIC_DELV_LOGIC 1
 //level
 #define ICR_LEVEL_DE_ASSERT 0
-#define ICR_LEVLE_ASSERT 1
+#define ICR_LEVEL_ASSERT 1
 //remote irr
 #define APIC_IOAPIC_IRR_RESET 0
 #define APIC_IOAPIC_IRR_ACCEPT 1

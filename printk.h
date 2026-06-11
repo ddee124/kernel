@@ -2,6 +2,8 @@
 #define __PRINTK_H__
 #include<stdarg.h>
 #include "font.h"
+#include "SMP.h"
+#include "spinlock.h"
 typedef struct position{
 	void* FB_addr;
 	unsigned long FB_length;
@@ -12,6 +14,7 @@ typedef struct position{
 	unsigned int XCharSize;
 	unsigned int YCharSize;
 	unsigned int pitch;
+	spinlock_T printk_lock;
 }position;
 position Pos;
 extern int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char* fmt,...);

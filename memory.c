@@ -511,26 +511,26 @@ unsigned long alloc_reserved_page(void){
 	return phys-0xffff800000000000;
 }
 void map_FB_2M_page(unsigned long phys_addr){
-	if(phys_addr>=0xffff800000000000)	phys_addr-=0xffff800000000000;
 	unsigned long* pml4=(unsigned long*)(((unsigned long)Global_CR3)&(~0xffful));
-	unsigned long vaddr=phys_addr;
+	unsigned long vaddr=phys_addr|0xffff800000000000;
 	unsigned short pml4_idx=(vaddr>>39)&0x1ff;
 	unsigned short pdpt_idx=(vaddr>>30)&0x1ff;
 	unsigned short pd_idx=(vaddr>>21)&0x1ff;
 	if(!(pml4[pml4_idx]&1)){
 		unsigned long new_pdpt=alloc_reserved_page();
+		memset((void*)new_pdpt,0,PAGE_4K_SIZE);
 		pml4[pml4_idx]=new_pdpt|0x3;
-		pml4[pml4_idx|0x100]=new_pdpt|0x3;
 	}
 	unsigned long pdpt_phys=pml4[pml4_idx]&(~0xffful);
 	unsigned long *pdpt=(unsigned long*)(pdpt_phys);
 	if(!(pdpt[pdpt_idx]&1)){
 		unsigned long new_pd=alloc_reserved_page();
+		memset((void*)new_pd,0,PAGE_4K_SIZE);
 		pdpt[pdpt_idx]=new_pd|0x3;
 	}
 	unsigned long pd_phys=pdpt[pdpt_idx]&(~0xffful);
 	unsigned long *pd=(unsigned long*)(pd_phys);
-	pd[pd_idx]=phys_addr|PAGE_KERNEL_Page|PAGE_PWT|PAGE_PCD;
+	pd[pd_idx]=phys_addr|PAGE_KERNEL_Page|PAGE_PWT;
 }
 void pagetable_init(){
 	unsigned long i,j;
@@ -547,12 +547,14 @@ void pagetable_init(){
 			tmp=Phy_To_Virt((unsigned long)Global_CR3&(~0xffful));
 			if(tmp[pml4_idx]==0){
 				unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
+				memset(virtual,0,PAGE_4K_SIZE);
 				tmp[pml4_idx]=Virt_To_Phy(virtual)|PAGE_KERNEL_Dir;
 			}
 			//tmp=(unsigned long*)((unsigned long)Phy_To_Virt(tmp[pml4_idx]&(~0xffful)));
 			tmp=Phy_To_Virt((unsigned long)tmp[pml4_idx]&(~0xffful));
 			if(tmp[pdpt_idx]==0){
 				unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
+				memset(virtual,0,PAGE_4K_SIZE);
 				tmp[pdpt_idx]=Virt_To_Phy(virtual)|PAGE_KERNEL_Dir;
 			}
 			tmp=Phy_To_Virt((unsigned long)tmp[pdpt_idx]&(~0xffful));
@@ -563,6 +565,7 @@ void pagetable_init(){
 	flush_tlb();
 }
 void init_memory(struct multiboot2_tag_mmap *mmap_tag){
+	wrmsr(0x277,0x0000050400050106);//init PAT
 	Global_CR3=Get_gdt();
 	unsigned long totalmem=0;
 	int i,j;
@@ -588,21 +591,20 @@ void init_memory(struct multiboot2_tag_mmap *mmap_tag){
 			}
 		}*/
 	}
-	unsigned long start=((unsigned long)Pos.FB_addr)&(~0x1fffff);
-	unsigned long end=((unsigned long)Pos.FB_addr+Pos.FB_length+0x1fffff)&(~0x1fffff);
+	unsigned long start=Virt_To_Phy(Pos.FB_addr)&(~0x1ffffful);
+	unsigned long end=(Virt_To_Phy(Pos.FB_addr)+Pos.FB_length+0x1ffffful)&(~0x1ffffful);
 	for(;start<end;start+=0x200000){
 		map_FB_2M_page(start);
 	}
 	flush_tlb();
 	unsigned long* tmp=Pos.FB_addr;
-	*tmp=0x00ff00;
-	/*color_printk(0xff,0,"Display Memory Structure,%d entries\n",memory_management_struct.e820_length);
+	color_printk(0xff,0,"Display Memory Structure,%d entries\n",memory_management_struct.e820_length);
 	for(i=0;i<=memory_management_struct.e820_length;i++){
 		if(memory_management_struct.e820[i].type==1)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:RAM\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
 		if(memory_management_struct.e820[i].type==2)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:ROM or Reserved\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
 		if(memory_management_struct.e820[i].type==3)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:ACPI Reclaim Memory\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
 		if(memory_management_struct.e820[i].type==4)	color_printk(0xffff00,0,"Address:%#018lx\tLength:%#018lx\tType:ACPI NVS Memory\n",memory_management_struct.e820[i].address,memory_management_struct.e820[i].length);
-	}*/
+	}
 	color_printk(0xffff00,0,"OS Can Used Total RAM:%#018lx\n",totalmem);
 	totalmem=0;
 	for(i=0;i<=memory_management_struct.e820_length;i++){
@@ -628,7 +630,7 @@ void init_memory(struct multiboot2_tag_mmap *mmap_tag){
 	//zone init
 	memory_management_struct.zones_struct=(struct Zone *)(((unsigned long)memory_management_struct.pages_struct+memory_management_struct.pages_length+PAGE_4K_SIZE-1)&PAGE_4K_MASK);
 	memory_management_struct.zones_size=0;
-	memory_management_struct.zones_length=(5*sizeof(struct Zone)+sizeof(long)-1)&(~(sizeof(long)-1));
+	memory_management_struct.zones_length=(6*sizeof(struct Zone)+sizeof(long)-1)&(~(sizeof(long)-1));
 	memset(memory_management_struct.zones_struct,0x00,memory_management_struct.zones_length);
 	for(int i=0;i<=memory_management_struct.e820_length;i++){
 		unsigned long start,end;
@@ -698,6 +700,7 @@ void init_memory(struct multiboot2_tag_mmap *mmap_tag){
 	//color_printk(0xffff00,0,"1.memory_management_struct.bits_map:%#018lx\tzone_struct->page_using_count:%d\tzone_struct->page_free_count:%d\n",*memory_management_struct.bits_map,memory_management_struct.zones_struct->page_using_count,memory_management_struct.zones_struct->page_free_count);
 	slab_init();
 	pagetable_init();
-	for(int i=0;i<10;i++)	*(Phy_To_Virt(Global_CR3)+i)=0ul;
-	flush_tlb();
+	//for(int i=0;i<10;i++)	*(Phy_To_Virt(Global_CR3)+i)=0ul;
+	//flush_tlb();
+	//ap boot need low memory,move it to main.c
 }

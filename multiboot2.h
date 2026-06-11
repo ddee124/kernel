@@ -3,24 +3,24 @@
 struct multiboot2_info{
 	unsigned int total_size;
 	unsigned int reserved;
-};
+}__attribute__((packed));
 struct multiboot2_tag{
 	unsigned int type;
 	unsigned int size;
-};
+}__attribute__((packed));
 struct multiboot2_mmap_entry{
 	unsigned long addr;
 	unsigned long length;
 	unsigned int type;
 	unsigned int reserved;
-};
+}__attribute__((packed));
 struct multiboot2_tag_mmap{
 	unsigned int type;
 	unsigned int size;
 	unsigned int entry_size;
 	unsigned int entry_version;
 	struct multiboot2_mmap_entry entries[];
-};
+}__attribute__((packed));
 struct multiboot2_tag_framebuffer{
 	unsigned int type;
 	unsigned int size;
@@ -39,11 +39,16 @@ struct multiboot2_tag_framebuffer{
 		unsigned char blue_field_position;
 		unsigned char blue_mask_size;
 	}color_info;
-};
+}__attribute__((packed));
 struct multiboot2_tag_end{
 	unsigned int type;
 	unsigned int size;
-};
+}__attribute__((packed));
+struct multiboot2_tag_acpi_new{
+	unsigned int type;
+	unsigned int size;
+	unsigned char rsdp[36];
+}__attribute__((packed));
 void* get_tag(unsigned long mbi_addr,unsigned int target){
 	struct multiboot2_info *mbi=(struct multiboot2_info*)mbi_addr;
 	unsigned char *ptr=(unsigned char*)mbi_addr+(sizeof(struct multiboot2_info));

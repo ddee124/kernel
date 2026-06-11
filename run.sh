@@ -20,4 +20,4 @@ EOF
 umount /mnt/efi
 losetup -d /dev/loop0
 qemu-img convert -f raw -O vmdk disk.img vmware.vmdk
-qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -drive file=disk.img,format=raw -m 4G -vga std -smp 2 -accel kvm -cpu host,+x2apic -machine pc
+qemu-system-x86_64 -bios /usr/share/ovmf/OVMF.fd -drive file=disk.img,format=raw -m 4G -vga std  -accel tcg -cpu qemu64,+x2apic -machine q35 -d cpu_reset,guest_errors,int -D qemu.log -smp 4
