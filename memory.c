@@ -5,7 +5,7 @@
 __attribute__((section(".bss"),aligned(4096))) static unsigned char page_reserved[4*4096]={0};
 static unsigned int page_reserved_used=0;
 struct Global_Memory_Descriptor memory_management_struct;
-unsigned long* Global_CR3;
+unsigned long Global_CR3;
 unsigned long page_init(struct Page* page,unsigned long flags){
 	page->attribute|=flags;
 	if(!page->reference_count||(page->attribute&PG_Shared)){
@@ -511,7 +511,7 @@ unsigned long alloc_reserved_page(void){
 	return phys-0xffff800000000000;
 }
 void map_FB_2M_page(unsigned long phys_addr){
-	unsigned long* pml4=(unsigned long*)(((unsigned long)Global_CR3)&(~0xffful));
+	unsigned long* pml4=Phy_To_Virt(Global_CR3&(~0xffful));
 	unsigned long vaddr=phys_addr|0xffff800000000000;
 	unsigned short pml4_idx=(vaddr>>39)&0x1ff;
 	unsigned short pdpt_idx=(vaddr>>30)&0x1ff;
@@ -544,7 +544,7 @@ void pagetable_init(){
 			pml4_idx=((unsigned long)Phy_To_Virt(p->PHY_address)>>PAGE_GDT_SHIFT)&0x1ff;
 			pdpt_idx=((unsigned long)Phy_To_Virt(p->PHY_address)>>PAGE_1G_SHIFT)&0x1ff;
 			pd_idx=((unsigned long)Phy_To_Virt(p->PHY_address)>>PAGE_2M_SHIFT)&0x1ff;
-			tmp=Phy_To_Virt((unsigned long)Global_CR3&(~0xffful));
+			tmp=Phy_To_Virt(Global_CR3&(~0xffful));
 			if(tmp[pml4_idx]==0){
 				unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
 				memset(virtual,0,PAGE_4K_SIZE);

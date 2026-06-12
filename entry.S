@@ -3,10 +3,10 @@
 .global system_call
 system_call:
 	cli
-	movq %rsp,user_rsp_save(%rip)
+	movq %rsp,%gs:0x0
 	movq syscall_rsp(%rip),%rsp
 	pushq $0x20
-	pushq user_rsp_save(%rip)
+	pushq %gs:0x0
 	pushq %r11
 	pushq $0x28
 	pushq %rcx
@@ -383,3 +383,12 @@ IRQ_ENTRY 0x34
 IRQ_ENTRY 0x35
 IRQ_ENTRY 0x36
 IRQ_ENTRY 0x37
+
+IRQ_ENTRY 0xc8
+IRQ_ENTRY 0xc9
+IRQ_ENTRY 0xca
+IRQ_ENTRY 0xcb
+IRQ_ENTRY 0xcc
+IRQ_ENTRY 0xcd
+IRQ_ENTRY 0xce
+IRQ_ENTRY 0xcf

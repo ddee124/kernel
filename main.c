@@ -9,12 +9,15 @@
 #include "keyboard.h"
 #include "mouse.h"
 #include "ACPI.h"
+#include "time.h"
 extern void SMP_Init();
 extern char _text;
 extern char _etext;
 extern char _edata;
 extern char _end;
 extern unsigned long _stack_start;
+struct time time_;
+extern void HPET_init();
 void Start_Kernel(unsigned long mbi_addr){
 	//Global_CR3=Get_gdt();
 	//for(unsigned long i=0;i<0x80000000;i+=0x200000)	map_2M_page(i);
@@ -59,10 +62,24 @@ void Start_Kernel(unsigned long mbi_addr){
 	SMP_Init();
 	color_printk(0xff00,0,"Init APIC\n");
 	APIC_init();
+	/*struct INT_CMD_REG icr_entry;
+	icr_entry.vector=0xc8;
+	icr_entry.deliver_mode=APIC_ICR_IOAPIC_Fixed;
+	icr_entry.destination.x2apic_destination=1;
+	icr_entry.dest_mode=ICR_IOAPIC_DELV_PHYSICAL;
+	icr_entry.deliver_status=APIC_ICR_IOAPIC_Idle;
+	icr_entry.res_1=0;
+	icr_entry.level=ICR_LEVEL_DE_ASSERT;
+	icr_entry.trigger=APIC_ICR_IOAPIC_Edge;
+	icr_entry.res_2=0;
+	icr_entry.res_3=0;
+	icr_entry.dest_shorthand=ICR_No_Shorthand;
+	wrmsr(0x830,*(unsigned long*)&icr_entry);*/
 	color_printk(0xff00,0,"Init keyboard\n");
 	keyboard_init();
 	color_printk(0xff00,0,"Init mouse\n");
 	mouse_init();
+	HPET_init();
 	while(1){
 		if(p_kb->count)	analysis_keycode();
 		if(p_mouse->count)	analysis_mousecode();

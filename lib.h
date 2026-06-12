@@ -76,6 +76,7 @@ void memcpy(void* addr1,void* addr2,unsigned long len){
 	unsigned char* p2=addr2;
 	while(len--)	*(p2++)=*(p1++);
 }
+void cli(){__asm__("cli");}
 void sti(){__asm__("sti");}
 void io_out8(unsigned short port,unsigned char value){
 	__asm__ __volatile__(

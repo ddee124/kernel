@@ -8,7 +8,7 @@
 #define CLONE_FILES 2
 #define CLONE_SIGNAL 4
 #define STACK_SIZE 32768
-#define NR_CPUS 8
+#define NR_CPUS 64
 #include "lib.h"
 #include "memory.h"
 #include "ptrace.h"
@@ -168,5 +168,5 @@ unsigned long sys_printf(struct pt_regs* regs){
 }
 system_call_t system_call_table[MAX_SYSTEM_CALL_NR]={[0]=no_system_call,[1]=sys_printf,[2 ... MAX_SYSTEM_CALL_NR-1]=no_system_call};
 unsigned long syscall_rsp=0x7c00;
-unsigned long user_rsp_save;
+unsigned long user_rsp_save[NR_CPUS];
 #endif

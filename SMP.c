@@ -9,6 +9,7 @@
 #include "multiboot2.h"
 #include "memory.h"
 #include "task.h"
+#include "interrupt.h"
 extern int global_i;
 extern unsigned long _stack_start;
 void SMP_Init(){
@@ -24,6 +25,10 @@ void SMP_Init(){
 	color_printk(WHITE,BLACK,"SMP copy byte:%#010x\n",(unsigned long)&_APU_boot_end-(unsigned long)&_APU_boot_start);
 	memcpy(_APU_boot_start,(unsigned char*)0xffff800000020000,(unsigned long)&_APU_boot_end-(unsigned long)&_APU_boot_start);
 	spin_init(&SMP_lock);
+	for(i=0xc8;i<0xd0;i++){
+		set_intr_gate(i,2,SMP_interrupt[i-0xc8]);
+	}
+	memset(SMP_IPI_desc,0,sizeof(struct irq_desc_T)*8);
 }
 void Start_SMP(){
 	color_printk(RED,YELLOW,"APU starting...... ");
@@ -65,7 +70,9 @@ void Start_SMP(){
 	);
 	color_printk(WHITE,BLACK,"x2APIC ID:%#010x\n",x);
 	load_TR(10+global_i*2);
+	wrmsr(0xC0000101,(unsigned long)(user_rsp_save+global_i));
 	spin_unlock(&SMP_lock);
+	sti();
 	while(1){
 		__asm__ __volatile__ ("hlt");
 	}
@@ -87,6 +94,7 @@ void boot_ap(unsigned int bsp_id){
 	wrmsr(0x830,*(unsigned long*)&icr_entry);
 	unsigned int* tss=0;
 	global_i=0;
+	wrmsr(0xC0000101,(unsigned long)(user_rsp_save+global_i));
 	unsigned long start=(unsigned long)madt_addr->entries;
 	unsigned long end=(unsigned long)madt_addr+madt_addr->header.length;
 	while(start<end){

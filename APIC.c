@@ -73,18 +73,14 @@ void IOAPIC_level_ack(unsigned long irq){
 	);
 	*ioapic_map.virtual_EOI_addr=0;
 }
-void(*interrupt[24])(void)={
-	IRQ0x20_interrupt,IRQ0x21_interrupt,IRQ0x22_interrupt,IRQ0x23_interrupt,
-	IRQ0x24_interrupt,IRQ0x25_interrupt,IRQ0x26_interrupt,IRQ0x27_interrupt,
-	IRQ0x28_interrupt,IRQ0x29_interrupt,IRQ0x2a_interrupt,IRQ0x2b_interrupt,
-	IRQ0x2c_interrupt,IRQ0x2d_interrupt,IRQ0x2e_interrupt,IRQ0x2f_interrupt,
-	IRQ0x30_interrupt,IRQ0x31_interrupt,IRQ0x32_interrupt,IRQ0x33_interrupt,
-	IRQ0x34_interrupt,IRQ0x35_interrupt,IRQ0x36_interrupt,IRQ0x37_interrupt
-};
-void do_IRQ(struct pt_regs *regs,unsigned long nr){
-	struct irq_desc_T* irq=&interrupt_desc[nr-32];
-	if(irq->handler!=0)	irq->handler(nr,irq->parameter,regs);
-	if(irq->controller!=0&&irq->controller->ack!=0)	irq->controller->ack(nr);
+void Local_APIC_edge_level_ack(unsigned long irq){
+	__asm__ __volatile__(
+		"movq $0x00,%%rdx \n\t"
+		"movq $0x00,%%rax \n\t"
+		"movq $0x80b,%%rcx \n\t"
+		"wrmsr \n\t"
+		:::"memory"
+	);
 }
 void Local_APIC_init(){
 	unsigned int x,y,a,b,c,d;
@@ -203,7 +199,7 @@ void APIC_pagetable_map(){
 	pml4_idx=((unsigned long)IOAPIC_addr>>PAGE_GDT_SHIFT)&0x1ff;
 	pdpt_idx=((unsigned long)IOAPIC_addr>>PAGE_1G_SHIFT)&0x1ff;
 	pd_idx=((unsigned long)IOAPIC_addr>>PAGE_2M_SHIFT)&0x1ff;
-	tmp=Phy_To_Virt((unsigned long)Global_CR3&(~0xffful));
+	tmp=Phy_To_Virt(Global_CR3&(~0xffful));
 	if(tmp[pml4_idx]==0){
 		unsigned long *virtual=kmalloc(PAGE_4K_SIZE,0);
 		memset(virtual,0,PAGE_4K_SIZE);

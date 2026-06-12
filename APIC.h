@@ -12,6 +12,7 @@ extern void IOAPIC_disable(unsigned long irq);
 extern unsigned long IOAPIC_install(unsigned long irq,void* arg);
 extern void IOAPIC_uninstall(unsigned long irq);
 extern void IOAPIC_edge_ack(unsigned long irq);
+extern void Local_APIC_edge_level_ack(unsigned long irq);
 struct APIC_LVT{
 	unsigned int vector :8,
 	deliver_mode :3,

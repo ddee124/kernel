@@ -19,7 +19,7 @@
 int ZONE_DMA_INDEX=0;
 int ZONE_NORMAL_INDEX=0;
 int ZONE_UNMAPED_INDEX=0;
-extern unsigned long* Global_CR3;
+extern unsigned long Global_CR3;
 extern struct Global_Memory_Descriptor memory_management_struct;
 extern void init_memory(struct multiboot2_tag_mmap *mmap_tag);
 struct E820{
@@ -73,8 +73,8 @@ do{\
 	);\
 }while(0)
 
-inline unsigned long* Get_gdt(){
-	unsigned long* tmp;
+inline unsigned long Get_gdt(){
+	unsigned long tmp;
 	__asm__ __volatile__(
 	    "movq %%cr3,%0 \n\t"
 	    :"=r"(tmp)
@@ -83,7 +83,7 @@ inline unsigned long* Get_gdt(){
 	);
 	return tmp;
 }
-extern inline unsigned long* Get_gdt();
+extern inline unsigned long Get_gdt();
 typedef struct{unsigned long pml4t;} pml4t_t;
 #define PG_PTable_Maped 1
 #define PG_Kernel_Init 2

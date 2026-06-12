@@ -25,6 +25,16 @@ extern void IRQ0x34_interrupt();
 extern void IRQ0x35_interrupt();
 extern void IRQ0x36_interrupt();
 extern void IRQ0x37_interrupt();
+extern void(*interrupt[24])(void);
+extern void IRQ0xc8_interrupt();
+extern void IRQ0xc9_interrupt();
+extern void IRQ0xca_interrupt();
+extern void IRQ0xcb_interrupt();
+extern void IRQ0xcc_interrupt();
+extern void IRQ0xcd_interrupt();
+extern void IRQ0xce_interrupt();
+extern void IRQ0xcf_interrupt();
+extern void(*SMP_interrupt[24])(void);
 struct irq_desc_T{
 	struct hw_int_controller* controller;
 	char* irq_name;
@@ -34,6 +44,7 @@ struct irq_desc_T{
 };
 #define NR_IRQS 24
 struct irq_desc_T interrupt_desc[NR_IRQS]={0};
+struct irq_desc_T SMP_IPI_desc[8]={0};
 struct hw_int_controller{
 	void(*enable)(unsigned long irq);
 	void(*disable)(unsigned long irq);
@@ -43,4 +54,5 @@ struct hw_int_controller{
 };
 extern int register_irq(unsigned long irq,void* arg,void(*handler)(unsigned long nr,unsigned long parameter,struct pt_regs* regs),unsigned long parameter,struct hw_int_controller* controller,char* irq_name);
 extern int unregister_irq(unsigned long irq);
+extern void do_IRQ(struct pt_regs *regs,unsigned long nr);
 #endif

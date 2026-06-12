@@ -3,6 +3,7 @@
 #include "printk.h"
 #include "APIC.h"
 struct acpi_madt* madt_addr;
+struct acpi_hpet* hpet;
 void map_ACPI_2M_page(unsigned long phys_addr){
 	unsigned long* pml4=(unsigned long*)(((unsigned long)Global_CR3)&(~0xffful));
 	unsigned long vaddr=phys_addr|0xffff800000000000;
@@ -96,11 +97,12 @@ void ACPI_init(struct multiboot2_tag_acpi_new* acpi_tag){
 	for(i=0;i<(xsdt->header.length-36)/8;i++){
 		struct acpi_table_header* hd=(struct acpi_table_header*)Phy_To_Virt(xsdt->table_ptrs[i]);
 		//color_printk(0xffff,0,"%#018lx\n",(unsigned long)hd);
-		//color_printk(0xffff,0,"%#018lx %c%c%c%c\n",(unsigned long)hd,hd->signature[0],hd->signature[1],hd->signature[2],hd->signature[3]);
+		color_printk(0xffff,0,"%#018lx %c%c%c%c\n",(unsigned long)hd,hd->signature[0],hd->signature[1],hd->signature[2],hd->signature[3]);
 		if(hd->signature[0]=='A'&&hd->signature[1]=='P'&&hd->signature[2]=='I'&&hd->signature[3]=='C'){
 			madt_addr=(struct acpi_madt*)hd;
 			if(madt_solve((struct acpi_madt*)hd))	while(1);
-			break;
+			//break;
 		}
+		if(hd->signature[0]=='H'&&hd->signature[1]=='P'&&hd->signature[2]=='E'&&hd->signature[3]=='T')	hpet=(struct acpi_hpet*)hd;
 	}
 }
