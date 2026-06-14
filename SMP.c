@@ -69,6 +69,7 @@ void Start_SMP(){
 		:"memory"
 	);
 	color_printk(WHITE,BLACK,"x2APIC ID:%#010x\n",x);
+	memset(current,0,sizeof(struct task_struct));
 	load_TR(10+global_i*2);
 	wrmsr(0xC0000101,(unsigned long)(user_rsp_save+global_i));
 	spin_unlock(&SMP_lock);

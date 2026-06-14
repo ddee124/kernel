@@ -10,6 +10,9 @@
 #include "mouse.h"
 #include "ACPI.h"
 #include "time.h"
+#include "softirq.h"
+#include "timer.h"
+#include "schedule.h"
 extern void SMP_Init();
 extern char _text;
 extern char _etext;
@@ -62,6 +65,11 @@ void Start_Kernel(unsigned long mbi_addr){
 	SMP_Init();
 	color_printk(0xff00,0,"Init APIC\n");
 	APIC_init();
+	//this should be done after ap booted
+	spin_lock(&SMP_lock);
+	for(int i=0;i<10;i++)	*(Phy_To_Virt(Global_CR3)+i)=0ul;
+	flush_tlb();
+	spin_unlock(&SMP_lock);
 	/*struct INT_CMD_REG icr_entry;
 	icr_entry.vector=0xc8;
 	icr_entry.deliver_mode=APIC_ICR_IOAPIC_Fixed;
@@ -79,7 +87,12 @@ void Start_Kernel(unsigned long mbi_addr){
 	keyboard_init();
 	color_printk(0xff00,0,"Init mouse\n");
 	mouse_init();
+	schedule_init();
+	softirq_init();
+	timer_init();
 	HPET_init();
+	sti();
+	task_init();
 	while(1){
 		if(p_kb->count)	analysis_keycode();
 		if(p_mouse->count)	analysis_mousecode();

@@ -4,7 +4,11 @@
 #include "interrupt.h"
 #include "APIC.h"
 #include "time.h"
+#include "softirq.h"
+#include "timer.h"
+#include "schedule.h"
 extern struct time time_;
+unsigned long volatile jiffies=0;
 unsigned char* check(struct acpi_hpet* hpet){
 	unsigned char x=0;unsigned int i=0;
 	for(i=0;i<hpet->header.length;i++)	x+=*((unsigned char*)hpet+i);
@@ -13,7 +17,22 @@ unsigned char* check(struct acpi_hpet* hpet){
 	return (unsigned char*)Phy_To_Virt(hpet->address);
 }
 void HPET_handler(unsigned long nr,unsigned long parameter,struct pt_regs* regs){
-	color_printk(RED,WHITE,"(HPET)");
+	//color_printk(RED,WHITE,"(HPET)");
+	jiffies++;
+	if(((struct timer_list*)list_next(&timer_list_head.list))->expire_jiffies<=jiffies)	set_softirq_status(TIMER_SIRQ);
+	switch(current->priority){
+		case 0:
+		case 1:
+			task_schedule.CPU_exec_task_jiffies--;
+			current->vrun_time++;
+			break;
+		case 2:
+		default:
+			task_schedule.CPU_exec_task_jiffies-=2;
+			current->vrun_time+=2;
+			break;
+	}
+	if(task_schedule.CPU_exec_task_jiffies<=0)	current->flags|=NEED_SCHEDULE;
 }
 struct hw_int_controller HPET_int_controller={
 	.enable=IOAPIC_enable,
@@ -70,7 +89,7 @@ void HPET_init(){
 	*(unsigned long*)(HPET_addr+0x100)=0x004c;
 	io_mfence();
 	//1s
-	*(unsigned long*)(HPET_addr+0x108)=1000000000000000ul/counter_clk_period;
+	*(unsigned long*)(HPET_addr+0x108)=100000000000000ul/counter_clk_period;
 	io_mfence();
 	//init MAIN_CNT & get CMOS time
 	get_cmos_time(&time_);

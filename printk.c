@@ -203,7 +203,7 @@ int vsprintf(char* buf,const char* fmt,va_list args){
 	return str-buf;
 }
 int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char* fmt,...){
-	spin_lock(&Pos.printk_lock);
+	//if(get_rflags()&0x200ul)	spin_lock(&Pos.printk_lock);
 	int i=0;int count=0;int line=0;va_list args;va_start(args,fmt);
 	i=vsprintf(buf,fmt,args);
 	va_end(args);
@@ -250,6 +250,6 @@ int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char* fmt,...){
 			Pos.YPosition=0;
 		}
 	}
-	spin_unlock(&Pos.printk_lock);
+	//if(get_rflags()&0x200ul)	spin_unlock(&Pos.printk_lock);
 	return i;
 }

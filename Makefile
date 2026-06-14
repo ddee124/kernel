@@ -1,6 +1,12 @@
 CFLAGS := -mcmodel=large -fno-builtin -g -m64
-system: head.o main.o printk.o memory.o entry.o trap.o APIC.o interrupt.o task.o cpu.o keyboard.o mouse.o SMP.o APU_boot.o ACPI.o HPET.o
-	ld -b elf64-x86-64 -z muldefs -o system head.o main.o printk.o memory.o entry.o trap.o APIC.o interrupt.o task.o cpu.o keyboard.o mouse.o SMP.o ACPI.o APU_boot.o HPET.o -T kernel.lds
+system: head.o main.o printk.o memory.o entry.o trap.o APIC.o interrupt.o task.o cpu.o keyboard.o mouse.o SMP.o APU_boot.o ACPI.o HPET.o softirq.o timer.o schedule.o
+	ld -b elf64-x86-64 -z muldefs -o system head.o main.o printk.o memory.o entry.o trap.o APIC.o interrupt.o task.o cpu.o keyboard.o mouse.o SMP.o ACPI.o APU_boot.o HPET.o softirq.o timer.o schedule.o -T kernel.lds
+schedule.o: schedule.c
+	gcc $(CFLAGS) -c schedule.c -o schedule.o
+timer.o: timer.c
+	gcc $(CFLAGS) -c timer.c -o timer.o
+softirq.o: softirq.c
+	gcc $(CFLAGS) -c softirq.c -o softirq.o
 HPET.o: HPET.c
 	gcc $(CFLAGS) -c HPET.c -o HPET.o
 SMP.o: SMP.c

@@ -14,7 +14,7 @@ struct time{
 	io_in8(0x71);\
 })
 int get_cmos_time(struct time* time_){
-	cli();
+	//cli();
 	do{
 		time_->year=CMOS_READ(0x09)+CMOS_READ(0x32)*0x100;
 		time_->month=CMOS_READ(0x08);
@@ -24,6 +24,6 @@ int get_cmos_time(struct time* time_){
 		time_->second=CMOS_READ(0x00);
 	}while(time_->second!=CMOS_READ(0x00));
 	io_out8(0x70,0x00);
-	sti();
+	//sti();
 }
 #endif

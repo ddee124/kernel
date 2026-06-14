@@ -126,6 +126,17 @@ extern inline void wrmsr(unsigned long address,unsigned long value){
 	);
 }
 extern inline void nop(){__asm__ __volatile__("nop":::);};
+unsigned long get_rflags(){
+	unsigned long ret=0;
+	__asm__ __volatile__(
+		"pushf \n\t"
+		"popq %0 \n\t"
+		:"=r"(ret)
+		:
+		:"memory"
+	);
+	return ret;
+}
 /*#define container_of(ptr,type,member)\
 ({\
 	typeof(((type*)0)->member)*p=(ptr);\

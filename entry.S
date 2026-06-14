@@ -94,6 +94,10 @@ CS=0xA0
 RFLAGS=0xA8
 OLDRSP=0xB0
 OLDSS=0xB8
+
+TSK_STATE=0x10
+TSK_FLAGS=0x18
+TSK_SIGNAL=0x20
 RESTORE_ALL:
     popq %r15
     popq %r14
@@ -120,6 +124,20 @@ RESTORE_ALL:
 ret_from_exception:
 .global ret_from_intr
 ret_from_intr:
+	movq $-1,%rcx
+	testq softirq_status(%rip),%rcx
+	jnz softirq_handler
+	movq %rsp,%rbx
+	andq $-32768,%rbx
+	movq TSK_FLAGS(%rbx),%rcx
+	testq $2,%rcx
+	jnz reschedule
+    jmp RESTORE_ALL
+softirq_handler:
+    callq do_softirq
+    jmp RESTORE_ALL
+reschedule:
+    callq schedule
     jmp RESTORE_ALL
 .global divide_error
 divide_error:

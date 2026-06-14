@@ -29,7 +29,8 @@ extern unsigned long _stack_start;
 #define TASK_ZOMBIE 8
 #define TASK_STOPPED 16
 
-#define PF_KTHREAD 1
+#define PF_KTHREAD (1ul<<0)
+#define NEED_SCHEDULE (1ul<<1)
 struct mm_struct{
 	pml4t_t *pgd;
 	unsigned long start_code,end_code;
@@ -52,13 +53,13 @@ struct task_struct{
 	struct List list;
 	volatile long state;
 	unsigned long flags;
+	long signal;
 	struct mm_struct *mm;
 	struct thread_struct *thread;
 	unsigned long addr_limit;
 	long pid;
-	long counter;
-	long signal;
 	long priority;
+	long vrun_time;
 };
 union task_union{
 	struct task_struct task;
@@ -69,13 +70,13 @@ struct thread_struct init_thread;
 #define INIT_TASK(tsk){\
 	.state=TASK_UNINTERRUPTIBLE,\
 	.flags=PF_KTHREAD,\
+	.signal=0,\
 	.mm=&init_mm,\
 	.thread=&init_thread,\
 	.addr_limit=0xffff800000000000,\
 	.pid=0,\
-	.counter=1,\
-	.signal=0,\
-	.priority=0,\
+	.priority=2,\
+	.vrun_time=0,\
 }
 union task_union init_task_union __attribute__((__section__(".data.init_task")))={INIT_TASK(init_task_union.task)};
 struct task_struct *init_task[NR_CPUS]={&init_task_union.task,0};

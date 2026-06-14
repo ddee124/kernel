@@ -245,7 +245,7 @@ void APIC_init(){
 	unsigned int x;
 	unsigned int* p;
 	APIC_pagetable_map();
-	for(i=32;i<56;i++)	set_intr_gate(i,2,interrupt[i-32]);
+	for(i=32;i<56;i++)	set_intr_gate(i,0,interrupt[i-32]);
 	//mask 8259A
 	color_printk(GREEN,BLACK,"MASK 8259A\n");
 	io_out8(0x21,0xff);
@@ -257,5 +257,5 @@ void APIC_init(){
 	memset(interrupt_desc,0,sizeof(struct irq_desc_T)*NR_IRQS);
 	boot_ap(bsp_id);
 	//enable IF rflags
-	sti();
+	//sti();
 }
