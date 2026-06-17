@@ -5,6 +5,7 @@
 #include "lib.h"
 #include "ptrace.h"
 #include "schedule.h"
+#include "syscall.h"
 extern void ret_from_intr();
 extern void kernel_thread_func(void);
 extern unsigned long ret_system_call();
@@ -91,12 +92,18 @@ __asm__(
 inline void __switch_to(struct task_struct *prev,struct task_struct *next){
 	init_tss[0].rsp0=next->thread->rsp0;
 	set_tss64(TSS64_Table,init_tss[0].rsp0,init_tss[0].rsp1,init_tss[0].rsp2,init_tss[0].ist1,init_tss[0].ist2,init_tss[0].ist3,init_tss[0].ist4,init_tss[0].ist5,init_tss[0].ist6,init_tss[0].ist7);
-	__asm__ __volatile__ ("movq %%fs,%0 \n\t":"=a"(prev->thread->fs));
-	__asm__ __volatile__ ("movq %%gs,%0 \n\t":"=a"(prev->thread->gs));
-	__asm__ __volatile__ ("movq %0,%%fs \n\t"::"a"(next->thread->fs));
-	__asm__ __volatile__ ("movq %0,%%gs \n\t"::"a"(next->thread->gs));
+	//__asm__ __volatile__ ("movq %%fs,%0 \n\t":"=a"(prev->thread->fs));
+	//__asm__ __volatile__ ("movq %%gs,%0 \n\t":"=a"(prev->thread->gs));
+	//__asm__ __volatile__ ("movq %0,%%fs \n\t"::"a"(next->thread->fs));
+	//__asm__ __volatile__ ("movq %0,%%gs \n\t"::"a"(next->thread->gs));
+	//this should be never changed
 	//wrmsr(0x175,next->thread->rsp0);
-	syscall_rsp=current->thread->rsp0;
+	//syscall_rsp=next->thread->rsp0;
+	prev->thread->fs_base=rdmsr(0xC0000100);
+	prev->thread->gs_base=rdmsr(0xC0000102);
+	wrmsr(0xC0000100,next->thread->fs_base);
+	wrmsr(0xC0000102,next->thread->gs_base);
+	__asm__ __volatile__ ("movq %0,%%gs:0x08 \n\t"::"r"(next->thread->rsp0):"memory");
 	color_printk(0xffffff,0,"prev->thread->rsp0:%#018lx\n",prev->thread->rsp0);
 	color_printk(0xffffff,0,"prev->thread->rsp:%#018lx\n",prev->thread->rsp);
 	color_printk(0xffffff,0,"prev->thread->rip:%#018lx\n",prev->thread->rip);
@@ -128,8 +135,8 @@ unsigned long do_fork(struct pt_regs *regs,unsigned long clone_flags,unsigned lo
 	thd->rsp0=(unsigned long)tsk+STACK_SIZE;
 	thd->rip=regs->rip;
 	thd->rsp=(unsigned long)tsk+STACK_SIZE-sizeof(struct pt_regs);
-	thd->fs=KERNEL_DS;
-	thd->gs=KERNEL_DS;
+	thd->fs_base=0;
+	thd->gs_base=0;
 	if(!(tsk->flags&PF_KTHREAD))	thd->rip=regs->rip=(unsigned long)ret_system_call;
 	tsk->state=TASK_RUNNING;
 	insert_task_queue(tsk);

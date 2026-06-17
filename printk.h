@@ -14,7 +14,7 @@ typedef struct position{
 	unsigned int XCharSize;
 	unsigned int YCharSize;
 	unsigned int pitch;
-	spinlock_T printk_lock;
+	struct spinlock_T printk_lock;
 }position;
 position Pos;
 extern int color_printk(unsigned int FRcolor,unsigned int BKcolor,const char* fmt,...);

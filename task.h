@@ -12,7 +12,7 @@
 #include "lib.h"
 #include "memory.h"
 #include "ptrace.h"
-#include "printk.h"
+//#include "printk.h"
 extern char _text;
 extern char _etext;
 extern char _data;
@@ -43,8 +43,8 @@ struct thread_struct{
 	unsigned long rsp0;
 	unsigned long rip;
 	unsigned long rsp;
-	unsigned long fs;
-	unsigned long gs;
+	unsigned long fs_base;
+	unsigned long gs_base;
 	unsigned long cr2;
 	unsigned long trap_nr;
 	unsigned long error_code;
@@ -53,6 +53,7 @@ struct task_struct{
 	struct List list;
 	volatile long state;
 	unsigned long flags;
+	long preempt_count;
 	long signal;
 	struct mm_struct *mm;
 	struct thread_struct *thread;
@@ -84,8 +85,8 @@ struct mm_struct init_mm={0};
 struct thread_struct init_thread={
 	.rsp0=(unsigned long)(init_task_union.stack+STACK_SIZE/sizeof(unsigned long)),
 	.rsp=(unsigned long)(init_task_union.stack+STACK_SIZE/sizeof(unsigned long)),
-	.fs=KERNEL_DS,
-	.gs=KERNEL_DS,
+	.fs_base=0,
+	.gs_base=0,
 	.cr2=0,
 	.trap_nr=0,
 	.error_code=0
@@ -157,17 +158,9 @@ do{\
 }while(0)
 
 extern void task_init();
-#define MAX_SYSTEM_CALL_NR 128
-typedef unsigned long(*system_call_t)(struct pt_regs* regs);
-unsigned long no_system_call(struct pt_regs* regs){
-	color_printk(0xff00ff,0,"no_system_call is calling,NR:%#04x\n",regs->rax);
-	return -1;
-}
-unsigned long sys_printf(struct pt_regs* regs){
-	color_printk(0,0xffffff,(char*)(regs->rdi));
-	return 1;
-}
-system_call_t system_call_table[MAX_SYSTEM_CALL_NR]={[0]=no_system_call,[1]=sys_printf,[2 ... MAX_SYSTEM_CALL_NR-1]=no_system_call};
-unsigned long syscall_rsp=0x7c00;
-unsigned long user_rsp_save[NR_CPUS];
+struct percpu_struct{
+	unsigned long user_rsp_save;
+	unsigned long syscall_rsp;
+};
+struct percpu_struct per_cpu[NR_CPUS];
 #endif

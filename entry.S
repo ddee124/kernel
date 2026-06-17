@@ -3,8 +3,10 @@
 .global system_call
 system_call:
 	cli
+	swapgs
 	movq %rsp,%gs:0x0
-	movq syscall_rsp(%rip),%rsp
+	//movq syscall_rsp(%rip),%rsp
+	movq %gs:0x8,%rsp
 	pushq $0x20
 	pushq %gs:0x0
 	pushq %r11
@@ -67,6 +69,7 @@ ret_system_call:
 	popq %r11
 	addq $0x10,%rsp
 	movq -0x10(%rsp),%rsp
+	swapgs
 	sti
 	sysretq
 
@@ -97,8 +100,14 @@ OLDSS=0xB8
 
 TSK_STATE=0x10
 TSK_FLAGS=0x18
-TSK_SIGNAL=0x20
+TSK_PREEMPT=0x20
+TSK_SIGNAL=0x28
 RESTORE_ALL:
+	movq CS(%rsp),%rax
+	andq $0x3,%rax
+	cmpq $0x3,%rax
+	je need_gsswap1
+noneed_swap1:
     popq %r15
     popq %r14
     popq %r13
@@ -120,6 +129,9 @@ RESTORE_ALL:
     popq %rax
     addq $0x10,%rsp
     iretq
+need_gsswap1:
+    swapgs
+    jmp noneed_swap1
 .global ret_from_exception
 ret_from_exception:
 .global ret_from_intr
@@ -129,12 +141,29 @@ ret_from_intr:
 	jnz softirq_handler
 	movq %rsp,%rbx
 	andq $-32768,%rbx
+	movq TSK_PREEMPT(%rbx),%rcx
+	//movq $0xffff,%rdi
+	//movq $0xffffff,%rsi
+	//leaq message(%rip),%rdx
+	//callq color_printk
+	cmpq $0,%rcx
+	jne RESTORE_ALL
 	movq TSK_FLAGS(%rbx),%rcx
 	testq $2,%rcx
 	jnz reschedule
     jmp RESTORE_ALL
+message:
+	.asciz "num:%ld\n"
 softirq_handler:
     callq do_softirq
+    movq %rsp,%rbx
+    andq $-32768,%rbx
+    movq TSK_PREEMPT(%rbx),%rcx
+    cmpq $0,%rcx
+    jne RESTORE_ALL
+    movq TSK_FLAGS(%rbx),%rcx
+    testq $2,%rcx
+    jnz reschedule
     jmp RESTORE_ALL
 reschedule:
     callq schedule
@@ -339,7 +368,7 @@ unknown_interrupt:
 	xchgq %rax,(%rsp)
 	jmp error_code
     jmp RESTORE_ALL
-    
+
 .macro IRQ_ENTRY nr
 .globl IRQ\()\nr\()_interrupt
 .type  IRQ\()\nr\()_interrupt, @function
@@ -371,10 +400,18 @@ IRQ\()\nr\()_interrupt:
     movq %rdx,%ds
     movq %rdx,%es
     movq %rsp,%rdi
+    movq CS(%rsp),%rax
+    andq $0x3,%rax
+    cmpq $0x3,%rax
+    je IRQ\()\nr\()_interrupt_gsswap
+IRQ\()\nr\()_interrupt_nogsswap:
     leaq ret_from_intr(%rip),%rax
     pushq %rax
     movq $\nr,%rsi
     jmp do_IRQ
+IRQ\()\nr\()_interrupt_gsswap:
+    swapgs
+    jmp IRQ\()\nr\()_interrupt_nogsswap
 .endm
 
 IRQ_ENTRY 0x20

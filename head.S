@@ -68,9 +68,10 @@ _start64h:
 	movq $0x10,%rax
     movq %rax,%ds
     movq %rax,%es
+    movq %rax,%ss
+    movq $0,%rax
     movq %rax,%fs
     movq %rax,%gs
-    movq %rax,%ss
     movq $0x7e00,%rsp
     
     movq %rdi,%r15

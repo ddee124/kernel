@@ -71,8 +71,9 @@ void Start_SMP(){
 	color_printk(WHITE,BLACK,"x2APIC ID:%#010x\n",x);
 	memset(current,0,sizeof(struct task_struct));
 	load_TR(10+global_i*2);
-	wrmsr(0xC0000101,(unsigned long)(user_rsp_save+global_i));
+	wrmsr(0xC0000101,(unsigned long)(per_cpu+global_i));
 	spin_unlock(&SMP_lock);
+	current->preempt_count=0;
 	sti();
 	while(1){
 		__asm__ __volatile__ ("hlt");
@@ -95,7 +96,7 @@ void boot_ap(unsigned int bsp_id){
 	wrmsr(0x830,*(unsigned long*)&icr_entry);
 	unsigned int* tss=0;
 	global_i=0;
-	wrmsr(0xC0000101,(unsigned long)(user_rsp_save+global_i));
+	wrmsr(0xC0000101,(unsigned long)(per_cpu+global_i));
 	unsigned long start=(unsigned long)madt_addr->entries;
 	unsigned long end=(unsigned long)madt_addr+madt_addr->header.length;
 	while(start<end){
@@ -138,4 +139,5 @@ void boot_ap(unsigned int bsp_id){
 		}
 		start=start+*((unsigned char*)(start+1));
 	}
+	current->preempt_count=0;
 }

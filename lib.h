@@ -117,6 +117,16 @@ unsigned int io_in32(unsigned short port){
 void io_mfence(){
 	__asm__ __volatile__("mfence \n\t":::);
 }
+extern inline unsigned long rdmsr(unsigned long address){
+	unsigned long ret1,ret2;
+	__asm__ __volatile__(
+		"rdmsr \n\t"
+		:"=a"(ret1),"=d"(ret2)
+		:"c"(address)
+		:"memory"
+	);
+	return (ret2<<32)|ret1;
+}
 extern inline void wrmsr(unsigned long address,unsigned long value){
 	__asm__ __volatile__(
 		"wrmsr \n\t"

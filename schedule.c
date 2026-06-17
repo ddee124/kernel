@@ -1,5 +1,6 @@
 #include "task.h"
 #include "schedule.h"
+#include "printk.h"
 unsigned long volatile jiffies=0;
 struct task_struct* get_next_task(){
 	struct task_struct* tsk=0;
@@ -19,6 +20,7 @@ void insert_task_queue(struct task_struct* tsk){
 	task_schedule.running_task_count++;
 }
 void schedule(){
+	//return;
 	struct task_struct* tsk=0;
 	current->flags&=~NEED_SCHEDULE;
 	tsk=get_next_task();
