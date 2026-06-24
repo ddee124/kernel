@@ -1,0 +1,25 @@
+#ifndef __TRAP_H__
+#define __TRAP_H__ 1
+extern void divide_error();
+extern void debug();
+extern void nmi();
+extern void int3();
+extern void overflow();
+extern void bound();
+extern void invalid_opcode();
+extern void dev_not_available();
+extern void double_fault();
+extern void coprocessor_segment_overrun();
+extern void invalid_tss();
+extern void segment_not_present();
+extern void stack_fault();
+extern void general_protection();
+extern void page_fault();
+extern void x87_fpu_error();
+extern void alignment_check();
+extern void machine_check();
+extern void simd_exception();
+extern void virtualization_exception();
+extern void control_protection_exception();
+extern void sys_vector_init();
+#endif
