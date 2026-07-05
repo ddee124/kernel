@@ -19,7 +19,7 @@ void analysis_error_code(uint64_t errcode){
 		if(errcode&0x04)	color_printk(RED,WHITE,"Refers to a segment or gate descriptor in the LDT;\n");
 		else    color_printk(RED,WHITE,"Refers to a descriptor in the current GDT;\n");
 	}
-	color_printk(RED,WHITE,0,"Segment Selector Index:%#010x\n",errcode&0xfff8);
+	color_printk(RED,WHITE,"Segment Selector Index:%#010x\n",errcode&0xfff8);
 }
 void do_divide_error(struct pt_regs* regs){
 	color_printk(RED,WHITE,"do_divide_error(0),errcode:%#018lx\n",regs->errcode);

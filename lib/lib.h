@@ -7,6 +7,7 @@
 static inline __always_inline void memcpy(void* dest,void* src,uint64_t len){
 	void* tmp_dest=dest;void* tmp_src=src;uint64_t tmp_len=len;
 	__asm__ __volatile__(
+		"cld \n\t"
 		"rep movsb \n\t"
 		:"+&D"(tmp_dest),"+&S"(tmp_src),"+&c"(tmp_len)
 		:
@@ -16,6 +17,7 @@ static inline __always_inline void memcpy(void* dest,void* src,uint64_t len){
 static inline __always_inline void memset(void* s,uint8_t c,uint64_t len){
 	void* tmp_s=s;uint64_t tmp_len=len;
 	__asm__ __volatile__(
+		"cld \n\t"
 		"rep stosb \n\t"
 		:"+&D"(tmp_s),"+&c"(tmp_len)
 		:"a"(c)
@@ -25,6 +27,7 @@ static inline __always_inline void memset(void* s,uint8_t c,uint64_t len){
 static inline __always_inline uint64_t strlen(unsigned char* s){
 	uint64_t res=-1ul;unsigned char* tmp_s=s;
 	__asm__ __volatile__(
+		"cld \n\t"
 		"xorq %%rax,%%rax \n\t"
 		"repne scasb \n\t"
 		"notq %%rcx \n\t"

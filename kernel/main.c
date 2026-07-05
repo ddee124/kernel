@@ -6,6 +6,7 @@
 #include "arch/x86_64/gate.h"
 #include "mem/slab.h"
 #include "driver/acpi/acpi.h"
+#include "driver/apic/apic.h"
 #include "driver/cpu/cpu.h"
 uint8_t TSS_Table[128];
 void Start_Kernel(void* mbi_addr){
@@ -43,8 +44,10 @@ void Start_Kernel(void* mbi_addr){
 	}
 	ACPI_init(acpi_tag);
 	cpu_info();
+	APIC_init();
+	sti();
 	uint64_t x;
-	x=*(volatile uint64_t*)(0xfffffffffffffff0);
+	x=*(volatile uint64_t*)(0xffff0ffffffffff0);
 	while(1)	halt();
 }
 uint64_t init_task_union[32768/8];

@@ -55,4 +55,5 @@ extern struct acpi_madt* madt_table;
 extern struct acpi_hpet* hpet_table;
 extern struct acpi_rsdp* rsdp_table;
 extern struct acpi_xsdt* xsdt_table;
+extern uint64_t other_broken(struct acpi_table_header* hd);
 #endif
