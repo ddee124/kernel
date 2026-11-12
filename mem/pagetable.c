@@ -99,7 +99,8 @@ void map_range_2m(uint64_t start,uint64_t end,uint64_t attr){
 }
 void map_range(uint64_t start,uint64_t end,uint64_t attr){
 	if(start>=end)	return;
-	cli();
+	uint64_t rflags_save;
+	local_irq_save(rflags_save);
 	uint64_t start_1g=(start+PAGE_1G_SIZE-1)&PAGE_1G_MASK;
 	uint64_t end_1g=end&PAGE_1G_MASK;
 	uint64_t tmp=start_1g;
@@ -112,5 +113,5 @@ void map_range(uint64_t start,uint64_t end,uint64_t attr){
 		if(start<start_1g)	map_range_2m(start,start_1g,attr);
 		if(end_1g<end)	map_range_2m(end_1g,end,attr);
 	}
-	sti();
+	local_irq_restore(rflags_save);
 }

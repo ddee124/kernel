@@ -49,6 +49,6 @@ extern uint64_t get_page_attribute(struct Page* page);
 extern uint64_t set_page_attribute(struct Page* page,uint64_t flags);
 extern struct Page* alloc_pages(uint64_t number,uint64_t page_flags,uint64_t flag);
 extern void free_pages(struct Page* page,int number);
-extern void init_memory(struct multiboot2_tag_mmap* mmap_tag);
+extern void init_memory(struct multiboot2_tag_mmap* mmap_tag,void* mbi);
 extern void display_memory_info();
 #endif

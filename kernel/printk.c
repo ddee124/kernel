@@ -1,6 +1,7 @@
 #include<stdarg.h>
 #include "kernel/printk.h"
 #include "lib/lib.h"
+#include "driver/serial/serial.h"
 struct position Pos;
 unsigned char buf[4096];
 void putchar(struct position* Por,uint32_t FRcolor,uint32_t BKcolor,unsigned char ch){
@@ -8,6 +9,7 @@ void putchar(struct position* Por,uint32_t FRcolor,uint32_t BKcolor,unsigned cha
 	static uint32_t* addr=0;
 	uint8_t* fontp=0;
 	uint32_t val=0;
+	if(!Por->FB_addr)	return;	/* serial only */
 	fontp=font_res[ch];
 	for(i=0;i<16;i++){
 		addr=(uint32_t*)((Por->FB_addr)+(Por->pitch)*((Por->YPosition)*(Por->YCharSize)+i)+4*(Por->XPosition)*(Por->XCharSize));
@@ -221,6 +223,11 @@ int32_t color_printk(uint32_t FRcolor,uint32_t BKcolor,const char* fmt,...){
 	int32_t i=0;uint32_t count=0;uint32_t line=0;va_list args;va_start(args,fmt);
 	i=vsprintf(buf,fmt,args);
 	va_end(args);
+	serial_write(buf,(uint64_t)i);
+	if(!Pos.FB_addr){
+		local_irq_restore(rflags_save);
+		return i;
+	}
 	for(count=0;count<i||line;count++){
 		if(line>0){
 			count--;

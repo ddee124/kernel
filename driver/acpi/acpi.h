@@ -1,6 +1,14 @@
 #ifndef __ACPI_H__
 #define __ACPI_H__
 #include "lib/multiboot2.h"
+/* generic address structure,ACPICA layout */
+struct acpi_gas{
+	uint8_t  address_space_id;
+	uint8_t  register_bit_width;
+	uint8_t  register_bit_offset;
+	uint8_t  access_size;
+	uint64_t address;
+}__attribute__((packed));
 struct acpi_rsdp{
 	uint8_t signature[8];
 	uint8_t checksum;
@@ -51,9 +59,13 @@ struct acpi_hpet{
 	uint8_t page_protection;
 }__attribute__((packed));
 extern void ACPI_init(struct multiboot2_tag_acpi_new* acpi_tag);
+extern int  ACPI_reset_available();
+extern void ACPI_reboot();
 extern struct acpi_madt* madt_table;
 extern struct acpi_hpet* hpet_table;
 extern struct acpi_rsdp* rsdp_table;
 extern struct acpi_xsdt* xsdt_table;
+extern struct acpi_gas acpi_reset_reg;
+extern uint8_t acpi_reset_value;
 extern uint64_t other_broken(struct acpi_table_header* hd);
 #endif

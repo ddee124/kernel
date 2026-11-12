@@ -147,8 +147,7 @@ void IO_APIC_init(){
 	io_mfence();
 	//RTE
 	for(i=0;i<=((x>>16)&0xff);i++)	ioapic_rte_write(i,0x10020+i);
-	//ioapic_rte_write(0x12,0x21);//enable keyboard
-	//ioapic_rte_write(0x28,0x2c);//enable mouse
+	ioapic_rte_write(0x1,0x21);//enable keyboard
 	color_printk(GREEN,BLACK,"I/O APIC Redirection Table Entries Set Finished.\n");	
 }
 void solve_madt(struct acpi_madt* madt){

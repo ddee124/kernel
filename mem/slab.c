@@ -24,11 +24,12 @@ struct Slab* kmalloc_create(uint64_t size){
 		case 16:
 		case 32:
 		case 64:
+		case 128:
 			vaddress=Phy_To_Virt(page->PHY_address);
-			structsize=sizeof(struct Slab)+PAGE_4K_SIZE/size/8;
+			structsize=sizeof(struct Slab)+(((PAGE_4K_SIZE/size+63)>>6)<<3);
 			slab=(struct Slab*)(vaddress+PAGE_4K_SIZE-structsize);
 			slab->color_map=(uint64_t*)((uintptr_t)slab+sizeof(struct Slab));
-			slab->free_count=(PAGE_4K_SIZE-(PAGE_4K_SIZE/size/8)-sizeof(struct Slab))/size;
+			slab->free_count=(PAGE_4K_SIZE-structsize)/size;
 			slab->using_count=0;
 			slab->color_count=slab->free_count;
 			slab->Vaddress=vaddress;
@@ -36,9 +37,8 @@ struct Slab* kmalloc_create(uint64_t size){
 			list_init(&slab->list);
 			slab->color_length=((slab->color_count+63)>>6)<<3;
 			memset(slab->color_map,0xff,slab->color_length);
-			for(i=0;i<slab->color_length;i++)	*(slab->color_map+(i>>6))^=1ul<<(i%64);
+			for(i=0;i<slab->color_count;i++)	*(slab->color_map+(i>>6))^=1ul<<(i%64);
 			break;
-		case 128:
 		case 256:
 		case 512:
 		case 1024:
@@ -155,7 +155,7 @@ void slab_init(){
 	uintptr_t virtual=0;
 	uint64_t i,j;
 	page=alloc_pages(1,0,0);
-	uintptr_t end=page->PHY_address;
+	uintptr_t end=Phy_To_Virt(page->PHY_address);
 	for(i=0;i<9;i++){
 		kmalloc_cache_size[i].cache_pool=(struct Slab*)end;
 		end=(end+sizeof(struct Slab)+7)&(~7ul);

@@ -1,7 +1,7 @@
 CC = gcc
 AS = as
 LD = ld
-CFLAGS = -O2 -m64 -fno-strict-aliasing -fwrapv -mgeneral-regs-only -finline-functions -mno-red-zone -mcmodel=large -fno-builtin -fno-tree-vectorize -fno-pic -ffreestanding -nostdlib -fno-stack-protector -mno-sse -mno-mmx -mno-80387 -I.
+CFLAGS =  -m64 -O2 -fno-strict-aliasing -fwrapv -mgeneral-regs-only -finline-functions -mno-red-zone -mcmodel=large -fno-builtin -fno-tree-vectorize -fno-pic -ffreestanding -nostdlib -fno-stack-protector -mno-sse -mno-mmx -mno-80387 -I.
 LDFLAGS = -b elf64-x86-64 -z muldefs -T kernel.lds
 SRCS_C  = $(shell find . -path ./build -prune -o -name '*.c' -print)
 SRCS_S  = $(shell find . -path ./build -prune -o -name '*.S' -print)

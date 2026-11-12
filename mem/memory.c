@@ -82,7 +82,7 @@ struct Page* alloc_pages(uint64_t number,uint64_t page_flags,uint64_t flag){
 			for(i=zone_high_idx;i<memory_entries;i++){
 				if(memory_zone[i].page_free_count<number)	continue;
 				uint64_t j;
-				for(j=0;j+number<memory_zone[i].pages_count;j++){
+				for(j=0;j+number<=memory_zone[i].pages_count;j++){
 					uint64_t k;
 					for(k=0;k<number;k++){
 						uint64_t *p=memory_zone[i].bits_map+((j+k)>>6);
@@ -200,10 +200,12 @@ void free_pages(struct Page* page,int number){
 	int i=0;
 	if(page==0){
 		color_printk(0xff0000,0,"free_pages() ERROR:page is invalid\n");
+		local_irq_restore(rflags_save);
 		return;
 	}
 	if(number<=0){
 		color_printk(0xff0000,0,"free_pages() ERROR:number is invalid\n");
+		local_irq_restore(rflags_save);
 		return;
 	}
 	uint64_t index=((uintptr_t)page-(uintptr_t)(page->zone_struct->pages_group))/sizeof(struct Page);
@@ -326,7 +328,29 @@ void tmp_map_range(uint64_t start,uint64_t end,uint64_t attr){
 	}
 }
 
-void init_memory(struct multiboot2_tag_mmap* mmap_tag){
+/* mark [start,end) physical as used, so the page allocator never hands it out */
+static void reserve_range(uint64_t start,uint64_t end){
+	uint64_t i,j;
+	for(i=0;i<memory_entries;i++){
+		uint64_t zone_start=memory_zone[i].zone_start_address;
+		uint64_t zone_end=memory_zone[i].zone_end_address;
+		uint64_t s,e,first,last;
+		if(end<=zone_start||start>=zone_end)	continue;
+		s=start>zone_start?start:zone_start;
+		e=end<zone_end?end:zone_end;
+		first=(s-zone_start)>>PAGE_4K_SHIFT;
+		last=((e-zone_start)+PAGE_4K_SIZE-1)>>PAGE_4K_SHIFT;
+		for(j=first;j<last&&j<memory_zone[i].pages_count;j++){
+			uint64_t* p=memory_zone[i].bits_map+(j>>6);
+			if(!(*p&(1ul<<(j%64)))){
+				*p|=1ul<<(j%64);
+				memory_zone[i].page_free_count--;
+				memory_zone[i].page_using_count++;
+			}
+		}
+	}
+}
+void init_memory(struct multiboot2_tag_mmap* mmap_tag,void* mbi){
 	wrmsr(0x277,0x0007010600070106);//init PAT
 	unsigned long totalmem=0;
 	uint64_t i,j;
@@ -415,9 +439,20 @@ void init_memory(struct multiboot2_tag_mmap* mmap_tag){
 			*(memory_zone[i].bits_map+(j>>6))^=1ul<<(j%64);
 		}
 	}
+	//keep the multiboot info (mmap,acpi,fb tags) out of the free list,
+	//otherwise the first slab page lands on top of it and the tags are gone
+	reserve_range(Virt_To_Phy((uint64_t)mbi),Virt_To_Phy((uint64_t)mbi)+((struct multiboot2_info*)mbi)->total_size);
 	//map fb
 	map_range(Virt_To_Phy(Pos.FB_addr)&(~0xffful),(Virt_To_Phy(Pos.FB_addr+Pos.FB_length)+0xfff)&(~0xffful),PAGE_PWT);
 	flush_tlb();
+	//drop the low half. nothing runs there any more,and while it exists every
+	//null or wild pointer silently reads physical memory instead of faulting.
+	//pml4[256] keeps its own entry,so the shared lower tables (including the
+	//0-1m mapping that holds zone0's bitmap/page array) stay reachable.
+	uint64_t* pml4=(uint64_t*)Phy_To_Virt(get_cr3()&(~0xffful));
+	pml4[0]=0;
+	flush_tlb();
+	color_printk(GREEN,BLACK,"[pagetable] low half unmapped,pml4[0]=0\n");
 }
 void display_memory_info(){
 	uint64_t i;

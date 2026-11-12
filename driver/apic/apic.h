@@ -7,11 +7,13 @@ struct IOAPIC_map{
 	uint32_t* virtual_EOI_addr;
 }ioapic_map;
 extern void APIC_init();
+extern uint64_t ioapic_rte_read(uint8_t index);
 extern void IOAPIC_enable(uint64_t irq);
 extern void IOAPIC_disable(uint64_t irq);
 extern uint64_t IOAPIC_install(uint64_t irq,void* arg);
 extern void IOAPIC_uninstall(uint64_t irq);
 extern void IOAPIC_edge_ack(uint64_t irq);
+extern void IOAPIC_level_ack(uint64_t irq);
 extern void Local_APIC_edge_level_ack(uint64_t irq);
 struct APIC_LVT{
 	uint32_t vector :8,
